@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlantCare — Smart Plant Care Reminders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+/* ---------- design tokens ---------- */
+:root{
+  --bg:#F4EFE2; --bg-soft:#ECE5D2; --card:#FBF8EF; --line:#E2DAC3; --line-2:#D2C9AC;
+  --ink:#22372B; --ink-2:#5A6B58; --ink-3:#8B9377;
+  --green:#3E6B45; --green-soft:#DDE7D2; --green-deep:#2B4A36;
+  --terra:#A9502A; --terra-soft:#F1DCCB;
+  --sage:#75895F; --sage-soft:#E5EADA;
+  --gold:#A3822B; --gold-soft:#EFE6C9;
+  --hero:#2B4A36; --hero-ink:#F2EEDF;
+  --shadow:0 1px 2px rgba(34,55,43,.05), 0 10px 26px rgba(34,55,43,.07);
+  --shadow-lg:0 14px 38px rgba(30,48,36,.16);
+}
+html[data-theme="dark"]{
+  --bg:#151F18; --bg-soft:#1B2620; --card:#1F2B23; --line:#2E3C31; --line-2:#3A4A3D;
+  --ink:#EAE5D1; --ink-2:#A8B29D; --ink-3:#71816B;
+  --green:#7FB185; --green-soft:#27382B; --green-deep:#0F1A12;
+  --terra:#DE8B5B; --terra-soft:#3A2A1F;
+  --sage:#9CB086; --sage-soft:#29331F;
+  --gold:#CFB05C; --gold-soft:#332E1E;
+  --hero:#26402F; --hero-ink:#EDE8D6;
+  --shadow:0 1px 2px rgba(0,0,0,.2), 0 10px 26px rgba(0,0,0,.25);
+  --shadow-lg:0 14px 38px rgba(0,0,0,.4);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 "Instrument Sans",sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.serif{font-family:Fraunces,serif;font-weight:600;letter-spacing:-.01em;line-height:1.2}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+svg.lucide{width:18px;height:18px;flex:none}
+::selection{background:var(--green-soft)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- layout ---------- */
+#app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+aside{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:24px 14px 18px;border-right:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;padding:0 10px 22px;font-family:Fraunces,serif;font-size:21px;font-weight:700;color:var(--ink)}
+nav{display:flex;flex-direction:column;gap:3px}
+nav a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:10px;color:var(--ink-2);font-weight:500;font-size:14.5px;transition:background .15s,color .15s}
+nav a:hover{background:var(--bg-soft);color:var(--ink)}
+nav a.on{background:var(--green-soft);color:var(--ink);font-weight:600}
+nav a.on svg{color:var(--green)}
+.side-foot{margin-top:auto;padding:10px 12px 0;border-top:1px solid var(--line)}
+.side-tag{font-family:Fraunces,serif;font-style:italic;font-size:13px;color:var(--ink-3);padding:10px 2px 6px}
+#theme-btn{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border-radius:9px;color:var(--ink-2);font-size:13.5px}
+#theme-btn:hover{background:var(--bg-soft);color:var(--ink)}
+main{min-width:0;display:flex;flex-direction:column}
+.mhead{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:18px 26px 0;position:relative;z-index:30}
+.mhead-brand{display:none;font-family:Fraunces,serif;font-weight:700;font-size:18px;margin-right:auto}
+#view{width:100%;max-width:1080px;margin:0 auto;padding:8px 26px 60px}
+
+/* ---------- buttons, chips, pills ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:11px;font-weight:600;font-size:14px;transition:transform .15s,box-shadow .15s,background .15s;border:1.5px solid transparent}
+.btn.primary{background:var(--green);color:#F5F2E4;box-shadow:var(--shadow)}
+.btn.primary:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.btn.ghost{border-color:var(--line-2);color:var(--ink)}
+.btn.ghost:hover{background:var(--bg-soft)}
+.btn.danger{border-color:var(--terra);color:var(--terra)}
+.btn.danger:hover{background:var(--terra-soft)}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:9px}
+.btn.sm svg.lucide{width:15px;height:15px}
+.icon-btn{position:relative;display:grid;place-items:center;width:38px;height:38px;border-radius:10px;border:1.5px solid var(--line-2);color:var(--ink-2)}
+.icon-btn:hover{background:var(--bg-soft);color:var(--ink)}
+.badge{position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:var(--terra);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center}
+.hidden{display:none!important}
+.pill{font-size:11px;padding:3px 9px;border-radius:99px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.pill.overdue{background:var(--terra-soft);color:var(--terra)}
+.pill.pending{background:var(--green-soft);color:var(--green)}
+.pill.snoozed{background:var(--gold-soft);color:var(--gold)}
+.pill.completed{background:var(--sage-soft);color:var(--sage)}
+.pill.paused{background:var(--bg-soft);color:var(--ink-3)}
+.cat-chip{position:absolute;left:10px;bottom:10px;background:rgba(251,248,239,.92);border:1px solid var(--line);border-radius:99px;padding:2px 9px;font-size:11px;font-weight:600;color:var(--ink-2)}
+html[data-theme="dark"] .cat-chip{background:rgba(31,43,35,.92)}
+
+/* ---------- page header ---------- */
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin:14px 0 20px;flex-wrap:wrap}
+.page-head h1{font-size:31px}
+.page-head .sub{color:var(--ink-2);font-size:14px;margin-top:4px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;background:var(--hero);color:var(--hero-ink);border-radius:20px;padding:26px 30px;box-shadow:var(--shadow-lg)}
+.hero-art{position:absolute;right:-14px;top:-16px;bottom:-16px;width:280px;opacity:.20;pointer-events:none}
+.hero-label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#A9C4AC;display:flex;align-items:center;gap:9px}
+.hero-label .tag{background:var(--terra);color:#fff;border-radius:99px;padding:2px 9px;letter-spacing:.08em}
+.hero-title{display:flex;align-items:center;gap:14px;font-size:30px;margin:10px 0 6px}
+.hero-title .tic{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22)}
+.hero-title .tic svg{color:#CFE3C9}
+.hero-sub{color:#C3D4C2;font-size:14px}
+.hero-sub b{color:#fff;font-family:Fraunces,serif;font-size:16px;font-numeric:tabular-nums}
+.hero-actions{display:flex;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap}
+.hero-actions .btn.primary{background:#E9E4D0;color:#26402F;border:0}
+.hero-actions .btn.primary:hover{background:#fff}
+.snooze-chips{display:flex;align-items:center;gap:6px;color:#B9CCB8;font-size:13px}
+.snooze-chips button{border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:4px 11px;color:#DFE8DA;font-size:12.5px;font-weight:600}
+.snooze-chips button:hover{background:rgba(255,255,255,.12)}
+.hero-actions .btn.link{color:#CFDCC8;text-decoration:underline;text-underline-offset:3px;font-weight:500}
+.hero.calm{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow)}
+.hero.calm .hero-label,.hero.calm .hero-sub{color:var(--ink-2)}
+.hero.calm .hero-sub b{color:var(--green)}
+
+/* ---------- notification hint ---------- */
+.hint{display:flex;align-items:center;gap:12px;background:var(--gold-soft);border:1px solid var(--gold);border-radius:14px;padding:11px 14px;margin-top:14px;font-size:13.5px;color:var(--ink)}
+.hint svg{color:var(--gold)}
+.hint .btn{margin-left:auto}
+
+/* ---------- ledger ---------- */
+.ledger{display:flex;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 8px;margin-top:16px;box-shadow:var(--shadow)}
+.ledger button{flex:1 1 130px;display:flex;align-items:center;justify-content:center;gap:10px;padding:11px 12px;border-radius:10px;transition:background .15s}
+.ledger button:hover{background:var(--bg-soft)}
+.ledger svg{color:var(--ink-3)}
+.ledger b{font-family:Fraunces,serif;font-size:23px;font-weight:600}
+.ledger span{font-size:12px;color:var(--ink-3);font-weight:500}
+.ledger .c-terra svg,.ledger .c-terra b{color:var(--terra)}
+.ledger .c-green svg,.ledger .c-green b{color:var(--green)}
+.ledger .c-gold svg,.ledger .c-gold b{color:var(--gold)}
+.ledger .c-sage svg,.ledger .c-sage b{color:var(--sage)}
+.ledger hr{border:0;border-left:1px solid var(--line);margin:8px 0}
+
+/* ---------- section labels & rows ---------- */
+.sect{margin-top:30px}
+.sect-label{display:flex;align-items:center;gap:10px;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:12px}
+.sect-label .rule{flex:1;height:1px;background:var(--line)}
+.trow{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:13px;background:var(--card);border:1px solid var(--line);transition:box-shadow .15s}
+.trow:hover{box-shadow:var(--shadow)}
+.trow+.trow{margin-top:8px}
+.tic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none}
+.tic.st-overdue{background:var(--terra-soft);color:var(--terra)}
+.tic.st-pending{background:var(--green-soft);color:var(--green)}
+.tic.st-snoozed{background:var(--gold-soft);color:var(--gold)}
+.tic.st-completed{background:var(--sage-soft);color:var(--sage)}
+.tic.st-paused{background:var(--bg-soft);color:var(--ink-3)}
+.tbody{flex:1;min-width:0}
+.ttitle{font-weight:600;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttitle em{font-family:Fraunces,serif;font-style:italic;font-weight:500;color:var(--ink-2)}
+.tsub{font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tside{display:flex;align-items:center;gap:8px;flex:none}
+.ttime{font-size:13px;color:var(--ink-2);font-weight:600;white-space:nowrap}
+.tacts{display:flex;gap:5px}
+.tacts .icon-btn{width:32px;height:32px;border-radius:8px}
+.tacts .icon-btn svg.lucide{width:15px;height:15px}
+.tacts .ok:hover{border-color:var(--green);color:var(--green)}
+.tacts .al:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ---------- week ribbon ---------- */
+.ribbon{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:14px}
+.rb{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:10px 4px 9px;text-align:center;transition:border-color .15s,background .15s}
+.rb:hover{border-color:var(--line-2)}
+.rb.sel{border-color:var(--green);background:var(--green-soft)}
+.rb .dow{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.rb .num{font-family:Fraunces,serif;font-size:19px;font-weight:600;margin:1px 0 5px;display:inline-grid;place-items:center;min-width:27px}
+.rb.today .num{background:var(--green);color:#F5F2E4;border-radius:8px}
+.rb .dots{display:flex;justify-content:center;gap:3px;min-height:7px}
+.rb .dot{width:6.5px;height:6.5px;border-radius:99px}
+.dot.st-pending{background:var(--green)}
+.dot.st-overdue{background:var(--terra)}
+.dot.st-completed{background:var(--sage)}
+.dot.st-snoozed{background:var(--gold)}
+.rb .cnt{font-size:11px;color:var(--ink-3);margin-top:4px}
+
+/* ---------- two-col & plant shelf ---------- */
+.cols{display:grid;grid-template-columns:1.5fr 1fr;gap:26px;align-items:start}
+.shelf{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x mandatory}
+.pcard{flex:0 0 205px;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .18s,box-shadow .18s;position:relative}
+.pcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.pimg{position:relative;aspect-ratio:4/3;overflow:hidden}
+.pimg img{position:relative;z-index:1;width:100%;height:100%;object-fit:cover;display:block}
+.plant-art{position:absolute;inset:0;z-index:0;display:grid;place-items:center}
+.plant-art svg{width:82%;height:92%}
+.pbody{padding:11px 13px 12px}
+.pname{font-family:Fraunces,serif;font-size:17.5px;font-weight:600}
+.pspec{font-family:Fraunces,serif;font-style:italic;color:var(--ink-2);font-size:12.5px;margin:1px 0 8px}
+.pnext{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-2);border-top:1px dashed var(--line);padding-top:8px}
+.pnext svg{width:13px;height:13px;color:var(--green)}
+.pnext .urgent{color:var(--terra)}
+.weekly{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.weekly h3{font-size:16px;margin-bottom:10px}
+.wrow{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-2);margin-top:7px}
+.wbar{flex:1;height:6px;border-radius:99px;background:var(--bg-soft);overflow:hidden}
+.wbar i{display:block;height:100%;border-radius:99px;background:var(--green)}
+
+/* ---------- toolbar / filters ---------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:18px}
+.toolbar .search{position:relative;flex:1 1 210px}
+.toolbar .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--ink-3)}
+.toolbar input,.toolbar select{padding:8px 11px;border:1.5px solid var(--line-2);border-radius:10px;background:var(--card);color:var(--ink);font-size:13.5px}
+.toolbar input:focus,.toolbar select:focus{outline:2px solid var(--green);outline-offset:1px}
+.toolbar .search input{width:100%;padding-left:33px}
+.chiprow{display:flex;gap:7px;flex-wrap:wrap}
+.fchip{border:1.5px solid var(--line-2);border-radius:99px;padding:5px 13px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.fchip.on{background:var(--green);border-color:var(--green);color:#F5F2E4}
+.tabs{display:flex;gap:4px;background:var(--bg-soft);border-radius:11px;padding:4px;margin-bottom:16px;width:max-content}
+.tabs button{padding:7px 16px;border-radius:8px;font-weight:600;font-size:13.5px;color:var(--ink-2)}
+.tabs button.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+
+/* ---------- plant grid & detail ---------- */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:17px}
+.pcard .pfoot{display:flex;gap:6px;padding:0 12px 12px}
+.pcard .pfoot .icon-btn{width:31px;height:31px;border-radius:8px}
+.pcard .pfoot .icon-btn svg.lucide{width:14px;height:14px}
+.meta-row{display:flex;gap:10px;align-items:baseline;font-size:14px;margin-top:8px}
+.meta-row svg{width:14px;height:14px;color:var(--ink-3);align-self:center}
+.meta-row b{font-weight:600}
+.muted{color:var(--ink-3);font-size:13px}
+.drow{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.drow:last-child{border-bottom:0}
+
+/* ---------- calendar ---------- */
+.cal-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.cal-head h2{font-size:22px;min-width:180px}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.cal-dow span{text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cell{min-height:92px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:7px;cursor:pointer;transition:box-shadow .15s}
+.cell:hover{box-shadow:var(--shadow)}
+.cell.out{opacity:.4}
+.cell.today{border-color:var(--green)}
+.cnum{display:inline-grid;place-items:center;min-width:24px;height:24px;font-size:12.5px;font-weight:600;color:var(--ink-2);border-radius:7px;margin-bottom:5px}
+.cell.today .cnum{background:var(--green);color:#F5F2E4}
+.chip{display:flex;align-items:center;gap:5px;width:100%;text-align:left;font-size:11px;padding:3px 7px;border-radius:6px;margin-bottom:3px;font-weight:600;color:var(--ink-2);overflow:hidden;white-space:nowrap}
+.chip svg{width:11px;height:11px}
+.chip.st-overdue{background:var(--terra-soft);color:var(--terra)}
+.chip.st-pending{background:var(--green-soft);color:var(--green)}
+.chip.st-completed{background:var(--sage-soft);color:var(--sage);text-decoration:line-through}
+.chip.st-snoozed{background:var(--gold-soft);color:var(--gold)}
+.more{font-size:10.5px;color:var(--ink-3);font-weight:600;padding-left:6px}
+.weekgrid{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;overflow-x:auto}
+.wcol{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px;min-height:150px}
+.wcol h4{font-family:Fraunces,serif;font-size:15px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:baseline}
+.wcol h4 span{font-size:11px;color:var(--ink-3);font-family:"Instrument Sans"}
+
+/* ---------- history ---------- */
+.hrow{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border-radius:13px;background:var(--card);border:1px solid var(--line)}
+.hrow+.hrow{margin-top:8px}
+.hrow .tbody .tsub{margin-top:2px}
+.note-bubble{margin-top:5px;font-size:12.5px;color:var(--ink-2);background:var(--bg-soft);border-radius:9px;padding:5px 10px;display:inline-block}
+
+/* ---------- forms / modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(24,36,27,.5);backdrop-filter:blur(3px);display:grid;place-items:center;padding:18px;z-index:90;animation:fade .18s ease}
+.modal{background:var(--card);border-radius:20px;padding:26px;width:min(560px,100%);max-height:88vh;overflow:auto;box-shadow:0 24px 60px rgba(18,28,20,.35);animation:rise .2s ease}
+.modal h3{font-size:22px;margin-bottom:4px}
+.modal .msub{color:var(--ink-2);font-size:13.5px;margin-bottom:18px}
+.modal.wide{width:min(640px,100%)}
+.field{display:block;margin-bottom:14px}
+.field>span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid var(--line-2);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;font-size:14px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
+textarea{resize:vertical;min-height:64px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.check{display:flex;align-items:center;gap:9px;font-size:14px;cursor:pointer;margin-bottom:14px}
+.check input{width:16px;height:16px;accent-color:var(--green)}
+.form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:8px}
+.form-err{color:var(--terra);font-size:13px;font-weight:600;margin-bottom:10px;display:none}
+.radio-cards{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.radio-cards label{border:1.5px solid var(--line-2);border-radius:11px;padding:10px;display:flex;gap:9px;align-items:center;cursor:pointer;font-size:13.5px;font-weight:600}
+.radio-cards label.on{border-color:var(--green);background:var(--green-soft)}
+.mtext{color:var(--ink-2);font-size:14px;margin:6px 0 18px}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:10px;z-index:120;max-width:min(360px,90vw)}
+.toast{background:var(--ink);color:#F4EFE2;border-radius:13px;padding:12px 15px;display:flex;gap:11px;align-items:center;box-shadow:0 12px 32px rgba(0,0,0,.3);animation:rise .22s ease;font-size:13.5px;cursor:default}
+.toast svg{width:17px;height:17px}
+.toast.ok svg{color:#8FCB93}.toast.warn svg{color:#E5956B}.toast.info svg{color:#CFB86B}.toast.alert svg{color:#E5956B}
+.toast .tbtn{margin-left:6px;border:1px solid rgba(255,255,255,.35);border-radius:99px;padding:3px 11px;font-size:12px;font-weight:700;color:#fff;flex:none}
+.toast.out{opacity:0;transform:translateY(6px);transition:.25s}
+
+/* ---------- bell panel ---------- */
+.bell-zone{position:relative}
+#bell-panel{position:absolute;right:0;top:46px;width:min(340px,88vw);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:12px;display:none;z-index:80}
+#bell-panel.open{display:block;animation:rise .18s ease}
+.bp-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding:2px 6px 9px}
+.bp-item{display:flex;gap:10px;align-items:center;padding:8px;border-radius:10px}
+.bp-item:hover{background:var(--bg-soft)}
+.bp-item .ttitle{font-size:13.5px}
+.bp-empty{padding:14px 8px;color:var(--ink-3);font-size:13.5px}
+.bp-cta{display:block;text-align:center;padding:9px;margin-top:6px;border-top:1px solid var(--line);color:var(--green);font-weight:600;font-size:13.5px}
+
+/* ---------- empty state ---------- */
+.empty{border:1.5px dashed var(--line-2);border-radius:18px;padding:40px 24px;text-align:center;color:var(--ink-2)}
+.empty svg.eleaf{width:58px;height:58px;color:var(--line-2);margin-bottom:12px}
+.empty h3{font-size:19px;color:var(--ink);margin-bottom:5px}
+.empty p{font-size:13.5px;max-width:380px;margin:0 auto 16px}
+
+/* ---------- tests ---------- */
+.test-row{display:flex;gap:10px;align-items:flex-start;padding:7px 4px;border-bottom:1px solid var(--line);font-size:13px}
+.test-row:last-child{border:0}
+.test-row .mark{font-weight:800;flex:none;width:20px}
+.test-row.ok .mark{color:var(--green)}
+.test-row.bad .mark{color:var(--terra)}
+
+@keyframes fade{from{opacity:0}}
+@keyframes rise{from{opacity:0;transform:translateY(9px)}}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  #app{grid-template-columns:1fr}
+  aside{position:fixed;bottom:0;left:0;right:0;top:auto;height:auto;flex-direction:row;align-items:center;padding:5px 6px calc(5px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);background:var(--card);z-index:60}
+  .brand{display:none}
+  nav{flex-direction:row;justify-content:space-around;width:100}
+  nav{width:100%}
+  nav a{flex-direction:column;gap:3px;font-size:10px;padding:6px 4px;flex:1}
+  nav a span{display:none}
+  nav a .nl{display:none}
+  nav a svg{width:19px;height:19px}
+  .side-foot{display:none}
+  main{padding-bottom:80px}
+  .mhead{padding:14px 16px 0}
+  .mhead-brand{display:block}
+  .mhead .btn.sm span{display:none}
+  #view{padding:6px 16px 50px}
+  .cols{grid-template-columns:1fr}
+  .ribbon{gap:4px}
+  .rb .cnt{display:none}
+  .hero{padding:20px}
+  .hero-title{font-size:23px}
+  .cell{min-height:64px}
+  .chip span{display:none}
+  .frow{grid-template-columns:1fr}
+  .tacts{display:none}
+  .trow.done-row{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <aside>
+    <a class="brand" href="#/today">
+      <svg width="27" height="27" viewBox="0 0 24 24" fill="none"><path d="M12 22V11" stroke="var(--green)" stroke-width="2" stroke-linecap="round"/><path d="M12 11C12 6 8.5 3 3.5 3c0 5.5 3.5 8 8.5 8z" fill="var(--green)"/><path d="M12 14c0-4 3-6.6 7.4-6.6 0 4.5-3 6.6-7.4 6.6z" fill="var(--green)" opacity=".65"/></svg>
+      <span>PlantCare</span>
+    </a>
+    <nav id="nav">
+      <a href="#/today" data-r="today"><i data-lucide="sun"></i><span class="nl">Today</span></a>
+      <a href="#/plants" data-r="plants"><i data-lucide="sprout"></i><span class="nl">My Plants</span></a>
+      <a href="#/tasks" data-r="tasks"><i data-lucide="clipboard-list"></i><span class="nl">Tasks</span></a>
+      <a href="#/calendar" data-r="calendar"><i data-lucide="calendar-days"></i><span class="nl">Calendar</span></a>
+      <a href="#/history" data-r="history"><i data-lucide="history"></i><span class="nl">History</span></a>
+      <a href="#/settings" data-r="settings"><i data-lucide="settings"></i><span class="nl">Settings</span></a>
+    </nav>
+    <div class="side-foot">
+      <div class="side-tag">grow slowly, water kindly</div>
+      <button id="theme-btn" data-act="theme-toggle"><i data-lucide="moon"></i><span class="nl">Dark mode</span></button>
+    </div>
+  </aside>
+  <main>
+    <div class="mhead">
+      <div class="mhead-brand">PlantCare</div>
+      <div class="bell-zone" id="bell-zone">
+        <button class="icon-btn" data-act="bell-toggle" aria-label="Alerts"><i data-lucide="bell"></i><span id="bell-badge" class="badge hidden"></span></button>
+        <div id="bell-panel"></div>
+      </div>
+      <button class="btn ghost sm" data-act="add-plant"><i data-lucide="sprout"></i><span>Add plant</span></button>
+      <button class="btn primary sm" data-act="add-schedule"><i data-lucide="plus"></i><span>New reminder</span></button>
+    </div>
+    <div id="view"></div>
+  </main>
+</div>
+<div id="toasts"></div>
+<div id="modal-root"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   PlantCare — single-file build
+   Storage: localStorage (persistent across restarts; see README notes)
+   Engine:  occurrence-key dedup, catch-up sync, snooze, recurrence
+   ===================================================================== */
+
+/* ---------------- utilities ---------------- */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+const pad = n => String(n).padStart(2,'0');
+const startOfDay = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const dayKey = d => { const x = new Date(d); return `${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}`; };
+const dtLocal = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const parseLocal = s => { const p = s.split(/[-T:]/).map(Number); return new Date(p[0], p[1]-1, p[2], p[3]||0, p[4]||0); };
+const byDue = (a,b) => new Date(a.dueAt) - new Date(b.dueAt);
+const icons = () => window.lucide && lucide.createIcons();
+
+const fmt = {
+  time: d => { d = new Date(d); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; },
+  date: d => new Date(d).toLocaleDateString(undefined,{month:'short',day:'numeric'}),
+  dateFull: d => new Date(d).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}),
+  month: d => new Date(d).toLocaleDateString(undefined,{month:'long',year:'numeric'}),
+};
+function relTime(iso){
+  const ms = new Date(iso) - Date.now(), a = Math.abs(ms), m = Math.round(a/60000);
+  let t;
+  if (m < 1) t = ms >= 0 ? 'less than a minute' : 'moments ago';
+  else if (m < 60) t = `${m} min`;
+  else if (m < 1440){ const h = Math.floor(m/60), mm = m%60; t = mm ? `${h}h ${mm}m` : `${h}h`; }
+  else { const d = Math.floor(m/1440); t = d === 1 ? '1 day' : `${d} days`; }
+  return ms >= 0 ? `in ${t}` : `${t} overdue`;
+}
+function dueLabel(iso){
+  const d = new Date(iso), diff = Math.round((startOfDay(d) - startOfDay(new Date()))/864e5);
+  if (diff === 0)  return `Today ${fmt.time(d)}`;
+  if (diff === 1)  return `Tomorrow ${fmt.time(d)}`;
+  if (diff === -1) return `Yesterday ${fmt.time(d)}`;
+  if (diff > 0 && diff < 7) return `${d.toLocaleDateString(undefined,{weekday:'long'})} ${fmt.time(d)}`;
+  return `${fmt.dateFull(d)}, ${fmt.time(d)}`;
+}
+
+/* ---------------- constants ---------------- */
+const ACTIVITIES = {
+  water:     {label:'Watering',            icon:'droplets',      tint:'green'},
+  fertilize: {label:'Fertilizing',         icon:'flask-conical', tint:'green'},
+  prune:     {label:'Pruning',             icon:'scissors',      tint:'sage'},
+  repot:     {label:'Repotting',           icon:'shovel',        tint:'sage'},
+  pest:      {label:'Pest inspection',     icon:'bug',           tint:'terra'},
+  moisture:  {label:'Soil moisture check', icon:'droplet',       tint:'green'},
+  sunlight:  {label:'Sunlight check',      icon:'sun',           tint:'gold'},
+  clean:     {label:'Leaf cleaning',       icon:'sparkles',      tint:'sage'},
+  custom:    {label:'Custom care',         icon:'pencil',        tint:'gold'},
+};
+const CATS = { indoor:'Indoor', outdoor:'Outdoor', flowering:'Flowering', herbs:'Herbs', succulents:'Succulents', vegetables:'Vegetables' };
+const TINT = { indoor:'#E8ECDD', outdoor:'#E6ECDF', flowering:'#F3E4E1', herbs:'#E2ECD6', succulents:'#E9E6D9', vegetables:'#F1E7D3' };
+const PAGES = {
+  today:{title:'Today'}, plants:{title:'My Plants'}, tasks:{title:'Tasks & Reminders'},
+  calendar:{title:'Calendar'}, history:{title:'Care History'}, settings:{title:'Settings'},
+};
+
+/* ---------------- store ---------------- */
+const DB_KEY = 'plantcare.v1';
+let db = null;
+const save = () => localStorage.setItem(DB_KEY, JSON.stringify(db));
+function load(){
+  try { db = JSON.parse(localStorage.getItem(DB_KEY)); } catch(e){ db = null; }
+  if (!db || db.v !== 1){ db = { v:1, profile:{name:'Riley', notifyEnabled:true, snoozeDefault:30, theme:'light', hintDismissed:false}, plants:[], schedules:[], occurrences:[], history:[] }; seed(); save(); }
+}
+const plantById = id => db.plants.find(p => p.id === id);
+const schedById = id => db.schedules.find(s => s.id === id);
+
+/* ---------------- recurrence engine ---------------- */
+const REC = {
+  // Add months with month-end clamping: Jan 31 + 1 mo -> Feb 28/29, never spills into March.
+  addMonths(d, m){
+    const y = d.getFullYear(), mo = d.getMonth(), day = d.getDate();
+    const last = new Date(y, mo + m + 1, 0).getDate();
+    return new Date(y, mo + m, Math.min(day, last), d.getHours(), d.getMinutes(), d.getSeconds());
+  },
+  next(iso, rec){
+    const d = new Date(iso);
+    switch (rec.type){
+      case 'once': return null;
+      case 'monthly': return REC.addMonths(d, Math.max(1, rec.interval || 1)).toISOString();
+      case 'weekly':  d.setDate(d.getDate() + 7 * Math.max(1, rec.interval || 1)); break;
+      case 'daily':
+      case 'days':    d.setDate(d.getDate() + Math.max(1, rec.interval || 1)); break;
+      default: return null;
+    }
+    return d.toISOString();
+  }
+};
+function recLabel(rec){
+  const n = Math.max(1, rec.interval || 1);
+  return { once:'One-time', daily: n>1?`Every ${n} days`:'Daily', weekly: n>1?`Every ${n} weeks`:'Weekly',
+           monthly: n>1?`Every ${n} months`:'Monthly', days:`Every ${n} days` }[rec.type] || 'One-time';
+}
+
+/* ---------------- reminder engine ---------------- */
+// Occurrence key = "<scheduleId>@<dueISO>" — the stable idempotency identifier:
+// the same scheduled moment can only ever exist once, so no duplicate notifications.
+function materialize(s, dueAt){
+  const key = s.id + '@' + new Date(dueAt).toISOString();
+  let occ = db.occurrences.find(o => o.id === key);
+  if (occ) return occ;
+  occ = { id:key, scheduleId:s.id, plantId:s.plantId, activity:s.activity, description:s.description,
+          notes:s.notes || '', dueAt:new Date(dueAt).toISOString(), status:'pending',
+          snoozedUntil:null, snoozeCount:0, snoozeAlerted:false, notifiedAt:null, completedAt:null };
+  db.occurrences.push(occ);
+  return occ;
+}
+function advanceSchedule(s, fromISO){
+  const nxt = REC.next(fromISO, s.recurrence);
+  if (nxt){ s.nextDueAt = nxt; }
+  else { s.status = 'expired'; s.nextDueAt = null; }
+}
+function ensureMaterial(taskId){
+  const existing = db.occurrences.find(o => o.id === taskId);
+  if (existing) return existing;
+  const o = getTask(taskId);
+  if (!o) return null;
+  const s = schedById(o.scheduleId);
+  const occ = materialize(s, o.dueAt);
+  advanceSchedule(s, o.dueAt);
+  return occ;
+}
+function getTask(id){
+  const occ = db.occurrences.find(o => o.id === id);
+  if (occ) return occ;
+  const at = id.indexOf('@');
+  if (at < 0) return null;
+  const s = schedById(id.slice(0, at));
+  return s ? virtualOcc(s, new Date(id.slice(at+1))) : null;
+}
+function virtualOcc(s, t){
+  return { id: s.id+'@'+t.toISOString(), virtual:true, scheduleId:s.id, plantId:s.plantId,
+           activity:s.activity, description:s.description, notes:s.notes||'',
+           dueAt:t.toISOString(), status:'pending', snoozedUntil:null, snoozeCount:0,
+           snoozeAlerted:false, notifiedAt:null, completedAt:null };
+}
+function statusOf(o){
+  if (o.status === 'completed') return 'completed';
+  const s = schedById(o.scheduleId);
+  if (s && s.status === 'paused') return 'paused';
+  const now = Date.now();
+  if (o.snoozedUntil && new Date(o.snoozedUntil) > now) return 'snoozed';
+  if (new Date(o.dueAt) <= now) return 'overdue';
+  return 'pending';
+}
+function pendingOccurrences(){ return db.occurrences.filter(o => o.status !== 'completed'); }
+function virtualOccurrences(untilDate){
+  const out = [];
+  for (const s of db.schedules){
+    if (s.status !== 'active' || !s.nextDueAt) continue;
+    let t = new Date(s.nextDueAt), guard = 0;
+    while (t <= untilDate && guard++ < 250){
+      out.push(virtualOcc(s, t));
+      const nxt = REC.next(t.toISOString(), s.recurrence);
+      if (!nxt) break;
+      t = new Date(nxt);
+    }
+  }
+  return out;
+}
+function dayTasks(d){
+  const a = startOfDay(d), b = addDays(a, 1);
+  return db.occurrences.filter(o => { const t = new Date(o.dueAt); return t >= a && t < b; })
+    .concat(virtualOccurrences(b).filter(o => { const t = new Date(o.dueAt); return t >= a && t < b; }))
+    .sort(byDue);
+}
+
+// The scheduler. Runs on load, every 15 s, and whenever the tab regains focus.
+// Catches up on anything missed while the app was closed, marks it overdue,
+// notifies once per occurrence (notifiedAt guard), and advances recurrence.
+function sync(){
+  const now = new Date();
+  let changed = false;
+  for (const s of db.schedules){
+    if (s.status !== 'active' || !s.nextDueAt) continue;
+    let guard = 0;
+    while (s.nextDueAt && new Date(s.nextDueAt) <= now && guard++ < 400){
+      materialize(s, s.nextDueAt);
+      changed = true;
+      advanceSchedule(s, s.nextDueAt);
+    }
+  }
+  for (const occ of db.occurrences){
+    if (occ.status === 'completed') continue;
+    const st = statusOf(occ);
+    if (st === 'paused') continue;
+    // initial alert — deduped by notifiedAt; stale catch-ups (>24 h) stay silent in-app only
+    if (!occ.notifiedAt && new Date(occ.dueAt) <= now){
+      occ.notifiedAt = now.toISOString();
+      changed = true;
+      if (now - new Date(occ.dueAt) < 864e5) notifyOccurrence(occ, false);
+    }
+    // snooze expired → nudge once more (snoozeAlerted guard)
+    if (occ.snoozedUntil && new Date(occ.snoozedUntil) <= now && !occ.snoozeAlerted){
+      occ.snoozeAlerted = true; occ.snoozedUntil = null; changed = true;
+      notifyOccurrence(occ, true);
+    }
+  }
+  if (changed) save();
+  return changed;
+}
+function notifyOccurrence(occ, isSnoozeAlert){
+  const p = plantById(occ.plantId), A = ACTIVITIES[occ.activity] || ACTIVITIES.custom;
+  const title = isSnoozeAlert ? `Still waiting: ${A.label}` : `${A.label} · ${p ? p.name : 'your plant'}`;
+  const body = isSnoozeAlert ? 'Your snooze ended — this task is still due.' : `${occ.description || A.label} · due ${dueLabel(occ.dueAt)}`;
+  NOTIFY.fire(title, body, occ.id);
+  toast(`${title} — ${relTime(occ.dueAt)}`, 'alert', { taskId: occ.id });
+}
+function completeTask(taskId, note){
+  const occ = ensureMaterial(taskId);
+  if (!occ || occ.status === 'completed') return;
+  occ.status = 'completed';
+  occ.completedAt = new Date().toISOString();
+  occ.notes = note || occ.notes || '';
+  db.history.unshift({ id:uid(), plantId:occ.plantId, scheduleId:occ.scheduleId, activity:occ.activity,
+                       scheduledAt:occ.dueAt, completedAt:occ.completedAt, notes:occ.notes });
+  save();
+  toast(`Done — recorded in ${esc(plantById(occ.plantId)?.name || 'plant')}'s care history`, 'ok');
+  render();
+}
+function snoozeTask(taskId, ms){
+  const occ = ensureMaterial(taskId);
+  if (!occ) return;
+  occ.snoozedUntil = new Date(Date.now() + ms).toISOString();
+  occ.snoozeAlerted = false;
+  occ.snoozeCount = (occ.snoozeCount || 0) + 1;
+  save();
+  toast(`Snoozed until ${fmt.time(occ.snoozedUntil)} — we'll nudge you then`, 'info');
+  render();
+}
+
+/* ---------------- browser notifications ---------------- */
+const NOTIFY = {
+  supported: 'Notification' in window,
+  status(){ return this.supported ? Notification.permission : 'unsupported'; },
+  request(){
+    if (!this.supported){ toast('This browser does not support notifications — reminders will appear inside PlantCare only.', 'warn'); return; }
+    if (Notification.permission === 'denied'){ toast('Notifications are blocked in your browser settings. Reminders will appear inside PlantCare only.', 'warn'); return; }
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') toast('Browser notifications are on', 'ok');
+      else toast('Permission not granted — reminders will appear inside PlantCare only.', 'info');
+      renderBellPanel(); render();
+    });
+  },
+  fire(title, body, tag){
+    if (!this.supported || Notification.permission !== 'granted' || !db.profile.notifyEnabled) return;
+    try { new Notification(title, { body, tag }); } catch(e){}
+  }
+};
+
+/* ---------------- procedural plant art ---------------- */
+const LEAF = 'M0 0 C-9 -13 -9 -34 0 -45 C9 -34 9 -13 0 0';
+const PETAL = 'M0 0 C-8 -7 -8 -20 0 -25 C8 -20 8 -7 0 0';
+const INKSTROKE = 'rgba(44,62,48,.5)';
+function artStyle(p){
+  const s = `${p.name} ${p.species}`.toLowerCase();
+  if (/monstera|philodendron|ficus|pothos|palm/.test(s)) return 'leafy';
+  if (/basil|mint|oregano|parsley|cilantro|herb|thyme/.test(s)) return 'herb';
+  if (/snake|sansevieria|dracaena|zanzibar|zz/.test(s)) return 'snake';
+  if (/tomato|pepper|lettuce|bean|cucumber|veg/.test(s)) return 'veg';
+  if (/rose|orchid|flower|hibiscus|daisy|bloom|petunia/.test(s)) return 'flower';
+  if (/jade|succul|aloe|echeveria|haworthia|cact/.test(s)) return 'succ';
+  return ({ indoor:'leafy', herbs:'herb', succulents:'succ', vegetables:'veg', flowering:'flower', outdoor:'leafy' })[p.category] || 'leafy';
+}
+function plantArt(p){
+  const g1 = '#4c7a55', g2 = '#63906a', g3 = '#87a884', g4 = '#a7c29b';
+  const L = (x,y,r,s=1,f=g2) => `<path d="${LEAF}" transform="translate(${x} ${y}) rotate(${r}) scale(${s})" fill="${f}" stroke="${INKSTROKE}" stroke-width="2"/>`;
+  const ring = (cx,cy,n,s,f,off) => Array.from({length:n}, (_,i) =>
+    `<path d="${PETAL}" transform="translate(${cx} ${cy}) rotate(${360/n*i+off}) scale(${s})" fill="${f}" stroke="${INKSTROKE}" stroke-width="2"/>`).join('');
+  const pot = `<path d="M74 118 h52 l-6 26 h-40 z" fill="#c98d63" stroke="${INKSTROKE}" stroke-width="2" stroke-linejoin="round"/><rect x="68" y="107" width="64" height="12" rx="5" fill="#b97a4e" stroke="${INKSTROKE}" stroke-width="2"/>`;
+  const style = artStyle(p);
+  let body = '';
+  if (style === 'leafy') body = `<path d="M100 107 C100 92 100 78 100 62" stroke="${INKSTROKE}" stroke-width="3" fill="none"/>` +
+    L(100,62,0,1.1,g1) + L(100,68,-48,1,g2) + L(100,68,48,1,g2) + L(100,92,-78,.6,g3) + L(100,92,78,.6,g3);
+  else if (style === 'snake') body = L(88,110,-9,1.25,g1)+L(96,110,-3,1.55,g2)+L(104,110,2,1.75,g1)+L(112,110,7,1.4,g2)+L(118,110,12,1.1,g3);
+  else if (style === 'herb') body = `<path d="M100 107 C98 86 92 72 78 58 M100 107 C100 84 100 66 96 46 M100 107 C104 86 112 74 124 62" stroke="${INKSTROKE}" stroke-width="2.5" fill="none"/>` +
+    L(78,58,-38,.5,g2)+L(83,66,-82,.4,g3)+L(96,46,4,.55,g1)+L(100,58,-46,.4,g3)+L(124,62,34,.5,g2)+L(119,72,84,.4,g3);
+  else if (style === 'succ') body = ring(100,86,8,1,g2,0) + ring(100,86,8,.62,g3,22.5) + `<circle cx="100" cy="86" r="6" fill="${g4}" stroke="${INKSTROKE}" stroke-width="2"/>`;
+  else if (style === 'veg') body = `<path d="M100 107 C100 84 100 62 98 42 M100 80 C92 74 84 72 76 74 M100 92 C108 86 116 84 124 86" stroke="${INKSTROKE}" stroke-width="3" fill="none"/>` +
+    L(98,42,0,.6,g2)+L(76,74,-42,.5,g3)+L(124,86,40,.5,g3) +
+    `<circle cx="78" cy="88" r="8" fill="#d0703c" stroke="${INKSTROKE}" stroke-width="2"/><circle cx="108" cy="98" r="8" fill="#d0703c" stroke="${INKSTROKE}" stroke-width="2"/><circle cx="120" cy="76" r="7" fill="#d0703c" stroke="${INKSTROKE}" stroke-width="2"/>`;
+  else if (style === 'flower') body = `<path d="M100 107 C100 84 100 62 100 46" stroke="${INKSTROKE}" stroke-width="3" fill="none"/>` +
+    L(100,78,-52,.55,g2)+L(100,92,52,.55,g2) +
+    Array.from({length:6}, (_,i) => `<ellipse cx="100" cy="20" rx="6.5" ry="12" fill="#e5a9b5" stroke="${INKSTROKE}" stroke-width="2" transform="rotate(${i*60},100,36)"/>`).join('') +
+    `<circle cx="100" cy="36" r="7" fill="#e2b64f" stroke="${INKSTROKE}" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustration of ${esc(p.name)}">${body}${pot}</svg>`;
+}
+function plantImg(p){
+  const art = `<div class="plant-art" style="background:${TINT[p.category] || '#E8ECDD'}">${plantArt(p)}</div>`;
+  if (p.photo) return `<div class="pimg"><img src="https://picsum.photos/seed/${encodeURIComponent(p.photo)}/480/360.jpg" alt="${esc(p.name)}" onerror="this.remove()">${art}</div>`;
+  return `<div class="pimg">${art}</div>`;
+}
+function heroArt(){
+  const L = (x,y,r,s) => `<path d="${LEAF}" transform="translate(${x} ${y}) rotate(${r}) scale(${s})" fill="none" stroke="#F2EEDF" stroke-width="2.5"/>`;
+  return `<svg viewBox="0 0 220 170" preserveAspectRatio="xMidYMid slice">${L(60,160,-18,1.4)}${L(60,160,-52,1.1)}${L(60,160,14,1.2)}${L(110,160,-8,1.6)}${L(110,160,-40,1.3)}${L(110,160,22,1.4)}${L(160,160,-16,1.3)}${L(160,160,20,1.1)}<path d="M40 168 C80 120 120 100 150 70" fill="none" stroke="#F2EEDF" stroke-width="3"/></svg>`;
+}
+const emptyArt = `<svg class="eleaf" viewBox="0 0 24 24" fill="none"><path d="M12 21V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 10C12 5.5 9 3 4.5 3c0 5 3.5 7 7.5 7z" fill="currentColor" opacity=".8"/><path d="M12 13c0-3.6 2.6-6 6.4-6 0 4-2.6 6-6.4 6z" fill="currentColor" opacity=".5"/></svg>`;
+
+/* ---------------- UI primitives ---------------- */
+function toast(msg, kind = 'info', opts = {}){
+  const t = document.createElement('div');
+  t.className = `toast ${kind}`;
+  const ic = { ok:'check', warn:'info', info:'clock', alert:'bell' }[kind] || 'info';
+  t.innerHTML = `<i data-lucide="${ic}"></i><span>${msg}</span>` +
+    (opts.taskId ? `` : '') + (opts.action ? `<button class="tbtn">${esc(opts.action.label)}</button>` : '');
+  if (opts.taskId){ t.style.cursor = 'pointer'; t.dataset.act = 'task'; t.dataset.id = opts.taskId; }
+  $('#toasts').appendChild(t); icons();
+  if (opts.action) t.querySelector('.tbtn').addEventListener('click', e => { e.stopPropagation(); opts.action.act(); t.remove(); });
+  const life = opts.action ? 8000 : 4800;
+  setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, life);
+}
+function openModal(html, cls = ''){
+  $('#modal-root').innerHTML = `<div class="overlay" data-overlay><div class="modal ${cls}" role="dialog" aria-modal="true">${html}</div></div>`;
+  icons();
+  const f = $('#modal-root').querySelector('input,select,textarea');
+  if (f) f.focus();
+}
+function closeModal(){ $('#modal-root').innerHTML = ''; }
+function confirmDialog({title, body, ok = 'Delete', danger = true, onOK}){
+  openModal(`<h3>${title}</h3><p class="mtext">${body}</p>
+    <div class="form-actions"><button class="btn ghost" data-close>Cancel</button>
+    <button class="btn ${danger ? 'danger' : 'primary'}" id="cf-ok">${ok}</button></div>`);
+  $('#modal-root').querySelector('[data-close]').addEventListener('click', closeModal);
+  $('#cf-ok').addEventListener('click', () => { closeModal(); onOK(); });
+}
+function actTint(activity, st){
+  const A = ACTIVITIES[activity] || ACTIVITIES.custom;
+  return `tic st-${st}`;
+}
+
+/* ---------------- shared renderers ---------------- */
+function taskRow(o, compact){
+  const st = statusOf(o);
+  const p = plantById(o.plantId), A = ACTIVITIES[o.activity] || ACTIVITIES.custom;
+  const snoozedNote = st === 'snoozed' ? ` · snoozed until ${fmt.time(o.snoozedUntil)}` : '';
+  const done = st === 'completed';
+  const acts = done ? `` :
+    `<div class="tacts">
+      <button class="icon-btn ok" data-act="done" data-id="${o.id}" aria-label="Mark done"><i data-lucide="check"></i></button>
+      ${st === 'overdue' ? `<button class="icon-btn al" data-act="snooze" data-id="${o.id}" data-ms="${(db.profile.snoozeDefault||30)*60000}" aria-label="Snooze"><i data-lucide="alarm-clock"></i></button>` : ''}
+      <button class="icon-btn" data-act="task" data-id="${o.id}" aria-label="Details"><i data-lucide="pencil"></i></button>
+    </div>`;
+  return `<div class="trow${done ? ' done-row' : ''}">
+    <div class="${actTint(o.activity, st)}"><i data-lucide="${A.icon}"></i></div>
+    <div class="tbody">
+      <div class="ttitle">${A.label} · <em>${esc(p ? p.name : '—')}</em></div>
+      <div class="tsub">${esc(o.description || '')}${snoozedNote}${done && o.notes ? ` — “${esc(o.notes)}”` : ''}</div>
+    </div>
+    <div class="tside">
+      ${compact ? '' : `<span class="ttime">${done ? `done ${fmt.time(o.completedAt)}` : fmt.time(o.dueAt)}</span>`}
+      <span class="pill ${st}">${st}</span>
+      ${acts}
+    </div>
+  </div>`;
+}
+function nextTaskFor(plantId, virts){
+  const items = pendingOccurrences().filter(o => o.plantId === plantId)
+    .concat(virts.filter(o => o.plantId === plantId)).sort(byDue);
+  return items[0] || null;
+}
+
+/* ---------------- views ---------------- */
+function renderToday(){
+  sync();
+  const now = new Date();
+  const greet = now.getHours() < 5 ? 'Good night' : now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
+  const pend = pendingOccurrences();
+  const virts = virtualOccurrences(addDays(now, 60));
+  // Next up: most urgent overdue, else earliest upcoming
+  const overdue = pend.filter(o => statusOf(o) === 'overdue').sort(byDue);
+  const nextUp = overdue[0] || [...pend.filter(o => ['pending','snoozed'].includes(statusOf(o))), ...virts].sort(byDue)[0] || null;
+  // stats — all computed from live data
+  const t0 = startOfDay(now), t1 = addDays(t0, 1);
+  const dueToday = [...pend, ...virts].filter(o => { const d = new Date(o.dueAt); return d >= t0 && d < t1 && statusOf(o) !== 'completed'; }).length;
+  const stats = {
+    plants: db.plants.length, dueToday,
+    upcoming: [...pend, ...virts].filter(o => { const d = new Date(o.dueAt); return d > now && d < addDays(now, 7); }).length,
+    overdue: overdue.length, completed: db.history.length,
+  };
+  const st = nextUp ? statusOf(nextUp) : null;
+  const p = nextUp ? plantById(nextUp.plantId) : null;
+  const A = nextUp ? (ACTIVITIES[nextUp.activity] || ACTIVITIES.custom) : null;
+  let hero;
+  if (nextUp){
+    hero = `<section class="hero ${st === 'snoozed' || st === 'pending' ? '' : ''}">
+      <div class="hero-art">${heroArt()}</div>
+      <div class="hero-label">Next up ${st === 'overdue' ? '<span class="tag">Overdue</span>' : ''}${st === 'snoozed' ? '<span class="tag" style="background:var(--gold)">Snoozed</span>' : ''}</div>
+      <div class="hero-title"><span class="${actTint(nextUp.activity, st === 'overdue' ? 'overdue' : 'pending')}"><i data-lucide="${A.icon}"></i></span>${A.label} the ${esc(p ? p.name : '')}</div>
+      <div class="hero-sub">${esc(p ? p.location || '' : '')}${p && p.location ? ' · ' : ''}${esc(nextUp.description || '')} · due ${dueLabel(nextUp.dueAt)} · <b data-cd="${nextUp.dueAt}">${relTime(nextUp.dueAt)}</b></div>
+      <div class="hero-actions">
+        <button class="btn primary" data-act="done" data-id="${nextUp.id}"><i data-lucide="check"></i> Mark as done</button>
+        <div class="snooze-chips">Snooze
+          <button data-act="snooze" data-id="${nextUp.id}" data-ms="600000">10 min</button>
+          <button data-act="snooze" data-id="${nextUp.id}" data-ms="1800000">30 min</button>
+          <button data-act="snooze" data-id="${nextUp.id}" data-ms="3600000">1 hour</button>
+        </div>
+        <button class="btn link" data-act="resched" data-id="${nextUp.id}">Reschedule</button>
+      </div>
+    </section>`;
+  } else {
+    hero = `<section class="hero calm">
+      <div class="hero-label">All quiet on the shelf</div>
+      <div class="hero-title">Everything's watered and waiting</div>
+      <div class="hero-sub">No pending care tasks. <b>Enjoy the green.</b></div>
+      <div class="hero-actions"><button class="btn primary" data-act="add-schedule"><i data-lucide="plus"></i> Schedule a reminder</button></div>
+    </section>`;
+  }
+  // notification permission hint
+  const hint = (NOTIFY.status() === 'default' && !db.profile.hintDismissed) ? `
+    <div class="hint"><i data-lucide="bell"></i>
+      <span>Turn on browser alerts so due reminders reach you even when this tab is in the background.</span>
+      <button class="btn ghost sm" data-act="notif-enable">Enable</button>
+      <button class="icon-btn" data-act="dismiss-hint" aria-label="Dismiss" style="width:30px;height:30px"><i data-lucide="x"></i></button>
+    </div>` : '';
+  // week ribbon
+  const sel = state.daySel || dayKey(now);
+  let ribbon = '<div class="ribbon">';
+  for (let i = 0; i < 7; i++){
+    const d = addDays(t0, i);
+    const tasks = dayTasks(d);
+    const dots = tasks.slice(0, 5).map(o => `<i class="dot st-${statusOf(o)}"></i>`).join('');
+    ribbon += `<button class="rb${dayKey(d) === dayKey(now) ? ' today' : ''}${dayKey(d) === sel ? ' sel' : ''}" data-act="pick-day" data-date="${dayKey(d)}">
+      <span class="dow">${d.toLocaleDateString(undefined,{weekday:'short'})}</span>
+      <span class="num">${d.getDate()}</span>
+      <div class="dots">${dots}</div>
+      <span class="cnt">${tasks.length ? tasks.length + (tasks.length === 1 ? ' task' : ' tasks') : '—'}</span>
+    </button>`;
+  }
+  ribbon += '</div>';
+  // agenda for selected day
+  const selDate = new Date(sel + 'T00:00');
+  const agenda = dayTasks(selDate);
+  const agendaHtml = agenda.length ? agenda.map(o => taskRow(o)).join('') :
+    `<div class="empty" style="padding:24px"><p style="margin:0">Nothing scheduled for ${selDate.toLocaleDateString(undefined,{weekday:'long'})}. A rest day for the garden.</p></div>`;
+  // plants shelf
+  const shelf = db.plants.length ? `<div class="shelf">${db.plants.map(p => {
+    const nt = nextTaskFor(p.id, virts);
+    const urgent = nt && ['overdue'].includes(statusOf(nt));
+    return `<button class="pcard" data-act="open-plant" data-id="${p.id}" style="text-align:left">
+      <div class="pimg">${plantImg(p)}<span class="cat-chip">${CATS[p.category] || 'Plant'}</span></div>
+      <div class="pbody">
+        <div class="pname">${esc(p.name)}</div>
+        <div class="pspec">${esc(p.species || '—')}</div>
+        <div class="pnext"><i data-lucide="${nt ? (ACTIVITIES[nt.activity] || ACTIVITIES.custom).icon : 'clock'}"></i>
+          <span class="${urgent ? 'urgent' : ''}">${nt ? `${(ACTIVITIES[nt.activity] || ACTIVITIES.custom).label} · ${dueLabel(nt.dueAt)}` : 'no reminders set'}</span></div>
+      </div>
+    </button>`; }).join('')}</div>` :
+    `<div class="empty">${emptyArt}<h3>Your shelf is empty</h3><p>Add your first plant and PlantCare will help you keep it thriving.</p><button class="btn primary" data-act="add-plant"><i data-lucide="sprout"></i> Add a plant</button></div>`;
+  // weekly summary
+  const wkStart = addDays(t0, -6);
+  const weekHist = db.history.filter(h => new Date(h.completedAt) >= wkStart);
+  const byAct = {};
+  weekHist.forEach(h => byAct[h.activity] = (byAct[h.activity] || 0) + 1);
+  const maxA = Math.max(1, ...Object.values(byAct));
+  const weekly = weekHist.length ? `<div class="weekly"><h3>This week at a glance</h3>
+      <div class="muted" style="margin-bottom:6px">${weekHist.length} task${weekHist.length === 1 ? '' : 's'} completed in the last 7 days</div>
+      ${Object.entries(byAct).map(([a, n]) => { const A = ACTIVITIES[a] || ACTIVITIES.custom;
+        return `<div class="wrow"><i data-lucide="${A.icon}"></i><span style="width:120px">${A.label}</span><div class="wbar"><i style="width:${Math.round(n/maxA*100)}%"></i></div><b>${n}</b></div>`; }).join('')}
+    </div>` :
+    `<div class="weekly"><h3>This week at a glance</h3><div class="muted">No completed tasks yet this week — finish one and it will show up here.</div></div>`;
+  const overdueHtml = overdue.length ? `<section class="sect">
+    <div class="sect-label">Overdue <span class="rule"></span><span class="pill overdue">${overdue.length} needs attention</span></div>
+    ${overdue.map(o => taskRow(o)).join('')}
+  </section>` : '';
+  return `
+  <div class="page-head"><div><h1>${greet}, ${esc(db.profile.name)}</h1>
+    <div class="sub">${now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})} · your garden's to-do list</div></div></div>
+  ${hero}${hint}
+  <div class="ledger">
+    <button data-act="goto" data-hash="#/plants"><i data-lucide="sprout"></i><b class="c-green">${stats.plants}</b><span>plants</span></button><hr>
+    <button data-act="goto" data-hash="#/tasks"><i data-lucide="sun"></i><b class="c-gold">${stats.dueToday}</b><span>due today</span></button><hr>
+    <button data-act="goto" data-hash="#/tasks"><i data-lucide="calendar-days"></i><b class="c-green">${stats.upcoming}</b><span>this week</span></button><hr>
+    <button data-act="goto" data-hash="#/tasks" data-preset="overdue"><i data-lucide="bell"></i><b class="c-terra">${stats.overdue}</b><span>overdue</span></button><hr>
+    <button data-act="goto" data-hash="#/history"><i data-lucide="check"></i><b class="c-sage">${stats.completed}</b><span>completed</span></button>
+  </div>
+  ${ribbon}
+  <div class="cols" style="margin-top:26px">
+    <section class="sect" style="margin-top:0">
+      <div class="sect-label">${selDate.getTime() === t0.getTime() ? "Today's care tasks" : selDate.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'})} <span class="rule"></span></div>
+      ${agendaHtml}
+    </section>
+    <section class="sect" style="margin-top:0">
+      <div class="sect-label">On the shelf <span class="rule"></span><button class="btn ghost sm" data-act="add-plant" style="margin-left:auto"><i data-lucide="plus"></i> Add</button></div>
+      ${shelf}
+      <div style="height:18px"></div>${weekly}
+    </section>
+  </div>
+  ${overdueHtml}`;
+}
+
+function renderPlants(){
+  const f = state.filters;
+  const q = (f.q || '').toLowerCase();
+  const list = db.plants.filter(p =>
+    (!q || `${p.name} ${p.species}`.toLowerCase().includes(q)) &&
+    (!f.cat || p.category === f.cat));
+  const virts = virtualOccurrences(addDays(new Date(), 60));
+  const chips = ['', ...Object.keys(CATS)].map(c =>
+    `<button class="fchip${f.cat === c ? ' on' : ''}" data-act="cat-filter" data-cat="${c}">${c === '' ? 'All' : CATS[c]}</button>`).join('');
+  const grid = list.length ? `<div class="pgrid">${list.map(p => {
+    const nt = nextTaskFor(p.id, virts);
+    const urgent = nt && statusOf(nt) === 'overdue';
+    return `<div class="pcard">
+      <button style="display:block;width:100%" data-act="open-plant" data-id="${p.id}">
+        <div class="pimg">${plantImg(p)}<span class="cat-chip">${CATS[p.category] || 'Plant'}</span></div>
+        <div class="pbody">
+          <div class="pname">${esc(p.name)}</div>
+          <div class="pspec">${esc(p.species || '—')}</div>
+          <div class="pnext"><i data-lucide="${nt ? (ACTIVITIES[nt.activity] || ACTIVITIES.custom).icon : 'clock'}"></i>
+            <span class="${urgent ? 'urgent' : ''}">${nt ? `${(ACTIVITIES[nt.activity] || ACTIVITIES.custom).label} · ${dueLabel(nt.dueAt)}` : 'no reminders set'}</span></div>
+        </div>
+      </button>
+      <div class="pfoot">
+        <button class="icon-btn" data-act="add-schedule" data-plant="${p.id}" aria-label="Add reminder" title="Add reminder"><i data-lucide="alarm-clock"></i></button>
+        <button class="icon-btn" data-act="edit-plant" data-id="${p.id}" aria-label="Edit" title="Edit"><i data-lucide="pencil"></i></button>
+        <button class="icon-btn" data-act="del-plant" data-id="${p.id}" aria-label="Delete" title="Delete" style="color:var(--terra)"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>`; }).join('')}</div>` :
+    (db.plants.length ? `<div class="empty">${emptyArt}<h3>No matches</h3><p>No plants match your search. Try a different name or clear the filters.</p></div>`
+      : `<div class="empty">${emptyArt}<h3>Your shelf is empty</h3><p>Add your first plant and set up a care schedule tailored to it.</p><button class="btn primary" data-act="add-plant"><i data-lucide="sprout"></i> Add a plant</button></div>`);
+  return `<div class="page-head"><div><h1>My Plants</h1><div class="sub">${db.plants.length} plant${db.plants.length === 1 ? '' : 's'} under your care</div></div>
+    <button class="btn primary" data-act="add-plant"><i data-lucide="sprout"></i> Add plant</button></div>
+  <div class="toolbar"><div class="search"><i data-lucide="search"></i><input name="fq" value="${esc(f.q)}" data-filter="q" placeholder="Search name or species…"></div>
+  <div class="chiprow">${chips}</div></div>${grid}`;
+}
+
+function renderTasks(){
+  const f = state.filters;
+  const tab = state.tasksTab;
+  // ---- occurrences tab ----
+  const all = db.occurrences.concat(virtualOccurrences(addDays(new Date(), 120)));
+  let list = all.filter(o => {
+    const st = statusOf(o);
+    if (f.status && st !== f.status) return false;
+    if (f.plant && o.plantId !== f.plant) return false;
+    if (f.activity && o.activity !== f.activity) return false;
+    if (f.from && new Date(o.dueAt) < parseLocal(f.from + 'T00:00')) return false;
+    if (f.to && new Date(o.dueAt) > addDays(parseLocal(f.to + 'T00:00'), 1)) return false;
+    if (f.q){ const p = plantById(o.plantId); return `${o.description} ${p ? p.name + ' ' + (p.species||'') : ''}`.toLowerCase().includes(f.q.toLowerCase()); }
+    return true;
+  }).sort(byDue);
+  const groups = [
+    { key:'overdue', label:'Overdue', match:o => statusOf(o) === 'overdue' },
+    { key:'today', label:'Today', match:o => { const s = statusOf(o); return ['pending','snoozed'].includes(s) && dayKey(o.dueAt) === dayKey(new Date()); } },
+    { key:'tomorrow', label:'Tomorrow', match:o => { const s = statusOf(o); return ['pending','snoozed'].includes(s) && dayKey(o.dueAt) === dayKey(addDays(new Date(),1)); } },
+    { key:'week', label:'Rest of this week', match:o => { const s = statusOf(o); if (s !== 'pending' && s !== 'snoozed') return false;
+        const d = new Date(o.dueAt); return d > addDays(new Date(),1) && d < addDays(new Date(),7); } },
+    { key:'later', label:'Later', match:o => { const s = statusOf(o); return ['pending','snoozed'].includes(s) && new Date(o.dueAt) >= addDays(new Date(),7); } },
+    { key:'done', label:'Recently completed', match:o => statusOf(o) === 'completed' && new Date(o.dueAt) > addDays(new Date(),-45) },
+  ];
+  let occHtml = '';
+  for (const g of groups){
+    const rows = list.filter(g.match);
+    if (!rows.length) continue;
+    const cap = g.key === 'done' ? 40 : 200;
+    occHtml += `<section class="sect"><div class="sect-label">${g.label}<span class="rule"></span><span class="pill ${g.key === 'overdue' ? 'overdue' : g.key === 'done' ? 'completed' : 'pending'}">${rows.length}</span></div>
+      ${rows.slice(0, cap).map(o => taskRow(o)).join('')}</section>`;
+  }
+  if (!occHtml) occHtml = `<div class="empty">${emptyArt}<h3>Nothing here</h3><p>No tasks match these filters. Widen the date range or clear a filter.</p></div>`;
+  // ---- rules tab ----
+  const rulesHtml = db.schedules.length ? db.schedules.map(s => {
+    const p = plantById(s.plantId), A = ACTIVITIES[s.activity] || ACTIVITIES.custom;
+    const st = s.status;
+    return `<div class="trow">
+      <div class="tic st-${st === 'active' ? 'pending' : st === 'paused' ? 'paused' : 'completed'}"><i data-lucide="${A.icon}"></i></div>
+      <div class="tbody">
+        <div class="ttitle">${A.label} · <em>${esc(p ? p.name : '—')}</em></div>
+        <div class="tsub">${recLabel(s.recurrence)}${s.description ? ' · ' + esc(s.description) : ''} · notify: ${s.notify ? 'on' : 'off'}</div>
+      </div>
+      <div class="tside">
+        <span class="ttime">${st === 'expired' ? 'ended' : s.nextDueAt ? dueLabel(s.nextDueAt) : '—'}</span>
+        <span class="pill ${st === 'active' ? 'pending' : st === 'paused' ? 'paused' : 'completed'}">${st}</span>
+        <div class="tacts">
+          ${st !== 'expired' ? `<button class="icon-btn" data-act="toggle-schedule" data-id="${s.id}" aria-label="${st === 'active' ? 'Pause' : 'Resume'}"><i data-lucide="${st === 'active' ? 'pause' : 'play'}"></i></button>` : ''}
+          <button class="icon-btn" data-act="edit-schedule" data-id="${s.id}" aria-label="Edit"><i data-lucide="pencil"></i></button>
+          <button class="icon-btn" data-act="del-schedule" data-id="${s.id}" aria-label="Delete" style="color:var(--terra)"><i data-lucide="trash-2"></i></button>
+        </div>
+      </div>
+    </div>`; }).join('') :
+    `<div class="empty">${emptyArt}<h3>No reminders yet</h3><p>Create a care schedule and PlantCare will keep track of every due date.</p><button class="btn primary" data-act="add-schedule"><i data-lucide="plus"></i> New reminder</button></div>`;
+  const plantOpts = `<option value="">All plants</option>` + db.plants.map(p => `<option value="${p.id}"${f.plant === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+  const actOpts = `<option value="">All activities</option>` + Object.entries(ACTIVITIES).map(([k,a]) => `<option value="${k}"${f.activity === k ? ' selected' : ''}>${a.label}</option>`).join('');
+  const stOpts = ['','pending','overdue','snoozed','completed'].map(s => `<option value="${s}"${f.status === s ? ' selected' : ''}>${s === '' ? 'Any status' : s[0].toUpperCase()+s.slice(1)}</option>`).join('');
+  return `<div class="page-head"><div><h1>Tasks & Reminders</h1><div class="sub">Every scheduled care task, and the rules that generate them</div></div>
+      <button class="btn primary" data-act="add-schedule"><i data-lucide="plus"></i> New reminder</button></div>
+    <div class="tabs"><button class="${tab === 'tasks' ? 'on' : ''}" data-act="tab" data-tab="tasks">Task list</button>
+      <button class="${tab === 'rules' ? 'on' : ''}" data-act="tab" data-tab="rules">Reminder rules</button></div>
+    ${tab === 'tasks' ? `<div class="toolbar">
+      <div class="search"><i data-lucide="search"></i><input name="tq" value="${esc(f.q)}" data-filter="q" placeholder="Search tasks…"></div>
+      <select data-filter="plant">${plantOpts}</select>
+      <select data-filter="activity">${actOpts}</select>
+      <select data-filter="status">${stOpts}</select>
+      <input type="date" value="${esc(f.from)}" data-filter="from" title="From" style="width:auto">
+      <input type="date" value="${esc(f.to)}" data-filter="to" title="To" style="width:auto">
+    </div>${occHtml}` : rulesHtml}`;
+}
+
+function renderCalendar(){
+  const c = state.calCursor;
+  let body = '', head = `<div class="cal-head">
+    <button class="icon-btn" data-act="cal-prev"><i data-lucide="chevron-left"></i></button>
+    <h2 class="serif" id="cal-title"></h2>
+    <button class="icon-btn" data-act="cal-next"><i data-lucide="chevron-right"></i></button>
+    <button class="btn ghost sm" data-act="cal-today">Today</button>
+    <div class="tabs" style="margin:0 0 0 auto">
+      ${['day','week','month'].map(v => `<button class="${state.calView === v ? 'on' : ''}" data-act="cal-view" data-view="${v}">${v[0].toUpperCase()+v.slice(1)}</button>`).join('')}
+    </div></div>`;
+  if (state.calView === 'month'){
+    const y = c.getFullYear(), m = c.getMonth();
+    const first = new Date(y, m, 1);
+    const start = new Date(first); start.setDate(first.getDate() - (first.getDay() + 6) % 7);
+    const virts = virtualOccurrences(addDays(new Date(y, m+1, 0), 1));
+    let cells = '', dow = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => `<span>${d}</span>`).join('');
+    for (let i = 0; i < 42; i++){
+      const d = new Date(start); d.setDate(start.getDate() + i);
+      const inM = d.getMonth() === m;
+      const tasks = db.occurrences.filter(o => dayKey(o.dueAt) === dayKey(d))
+        .concat(virts.filter(o => dayKey(o.dueAt) === dayKey(d))).sort(byDue);
+      const chips = tasks.slice(0, 3).map(o => {
+        const A = ACTIVITIES[o.activity] || ACTIVITIES.custom;
+        return `<button class="chip st-${statusOf(o)}" data-act="task" data-id="${o.id}"><i data-lucide="${A.icon}"></i><span>${fmt.time(o.dueAt)}</span></button>`;
+      }).join('') + (tasks.length > 3 ? `<span class="more">+${tasks.length-3} more</span>` : '');
+      cells += `<div class="cell${inM ? '' : ' out'}${dayKey(d) === dayKey(new Date()) ? ' today' : ''}" data-act="cal-pick" data-date="${dayKey(d)}">
+        <span class="cnum">${d.getDate()}</span>${chips}</div>`;
+    }
+    body = `<div class="cal-dow">${dow}</div><div class="cal">${cells}</div>`;
+    setTimeout(() => { const t = $('#cal-title'); if (t) t.textContent = fmt.month(c); }, 0);
+  } else if (state.calView === 'week'){
+    const start = new Date(c); start.setDate(c.getDate() - (c.getDay() + 6) % 7);
+    let cols = '';
+    for (let i = 0; i < 7; i++){
+      const d = addDays(start, i);
+      const tasks = dayTasks(d);
+      cols += `<div class="wcol"><h4>${d.toLocaleDateString(undefined,{weekday:'short'})} ${d.getDate()}<span>${tasks.length}</span></h4>
+        ${tasks.slice(0, 8).map(o => { const A = ACTIVITIES[o.activity] || ACTIVITIES.custom;
+          return `<button class="chip st-${statusOf(o)}" data-act="task" data-id="${o.id}"><i data-lucide="${A.icon}"></i><span>${fmt.time(o.dueAt)} ${A.label}</span></button>`; }).join('') || '<div class="muted" style="font-size:12px">—</div>'}
+        ${tasks.length > 8 ? `<span class="more">+${tasks.length-8} more</span>` : ''}</div>`;
+    }
+    body = `<div class="weekgrid">${cols}</div>`;
+    setTimeout(() => { const t = $('#cal-title'); if (t) t.textContent = 'Week of ' + start.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }, 0);
+  } else {
+    const tasks = dayTasks(c);
+    body = (tasks.length ? tasks.map(o => taskRow(o)).join('') :
+      `<div class="empty" style="padding:28px"><p style="margin:0">Nothing scheduled for ${c.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}.</p></div>`);
+    setTimeout(() => { const t = $('#cal-title'); if (t) t.textContent = c.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'}); }, 0);
+  }
+  return `<div class="page-head"><div><h1>Calendar</h1><div class="sub">Scheduled care activities by date</div></div></div>${head}${body}`;
+}
+
+function renderHistory(){
+  const f = state.filters;
+  // weekly summary from real history
+  const t0 = startOfDay(new Date());
+  const week = db.history.filter(h => new Date(h.completedAt) >= addDays(t0, -6));
+  const byAct = {}; week.forEach(h => byAct[h.activity] = (byAct[h.activity] || 0) + 1);
+  const maxA = Math.max(1, ...Object.values(byAct));
+  const summary = `<div class="weekly" style="margin-bottom:22px"><h3>Weekly care summary</h3>
+    ${week.length ? `<div class="muted" style="margin-bottom:6px">${week.length} task${week.length === 1 ? '' : 's'} completed in the last 7 days</div>
+    ${Object.entries(byAct).map(([a,n]) => { const A = ACTIVITIES[a] || ACTIVITIES.custom;
+      return `<div class="wrow"><i data-lucide="${A.icon}"></i><span style="width:150px">${A.label}</span><div class="wbar"><i style="width:${Math.round(n/maxA*100)}%"></i></div><b>${n}</b></div>`; }).join('')}`
+    : `<div class="muted">Nothing completed yet this week. Finishing a task from the Today page will show up here.</div>`}
+  </div>`;
+  let list = db.history.filter(h => {
+    if (f.plant && h.plantId !== f.plant) return false;
+    if (f.activity && h.activity !== f.activity) return false;
+    if (f.from && new Date(h.completedAt) < parseLocal(f.from + 'T00:00')) return false;
+    if (f.to && new Date(h.completedAt) > addDays(parseLocal(f.to + 'T00:00'), 1)) return false;
+    return true;
+  });
+  const rows = list.length ? list.map(h => {
+    const p = plantById(h.plantId), A = ACTIVITIES[h.activity] || ACTIVITIES.custom;
+    const late = new Date(h.completedAt) - new Date(h.scheduledAt) > 36e5;
+    return `<div class="hrow">
+      <div class="tic st-completed"><i data-lucide="${A.icon}"></i></div>
+      <div class="tbody">
+        <div class="ttitle">${A.label} · <em>${esc(p ? p.name : 'deleted plant')}</em></div>
+        <div class="tsub">completed ${new Date(h.completedAt).toLocaleString(undefined,{month:'short',day:'numeric'})} at ${fmt.time(h.completedAt)} · scheduled ${fmt.date(h.scheduledAt)} ${fmt.time(h.scheduledAt)}${late ? ' · finished late' : ' · on time'}</div>
+        ${h.notes ? `<div class="note-bubble">${esc(h.notes)}</div>` : ''}
+      </div>
+      <div class="tside"><span class="pill completed">done</span></div>
+    </div>`; }).join('') :
+    `<div class="empty">${emptyArt}<h3>No history yet</h3><p>Completed care tasks are recorded here, with what was done, when, and any notes you left.</p></div>`;
+  const plantOpts = `<option value="">All plants</option>` + db.plants.map(p => `<option value="${p.id}"${f.plant === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
+  const actOpts = `<option value="">All activities</option>` + Object.entries(ACTIVITIES).map(([k,a]) => `<option value="${k}"${f.activity === k ? ' selected' : ''}>${a.label}</option>`).join('');
+  return `<div class="page-head"><div><h1>Care History</h1><div class="sub">${db.history.length} completed task${db.history.length === 1 ? '' : 's'} on record</div></div>
+    <button class="btn ghost" data-act="export"><i data-lucide="download"></i> Export data</button></div>
+  ${summary}
+  <div class="toolbar">
+    <select data-filter="plant">${plantOpts}</select>
+    <select data-filter="activity">${actOpts}</select>
+    <input type="date" value="${esc(f.from)}" data-filter="from" title="From" style="width:auto">
+    <input type="date" value="${esc(f.to)}" data-filter="to" title="To" style="width:auto">
+  </div>${rows}`;
+}
+
+function renderSettings(){
+  const ns = NOTIFY.status();
+  const nstat = ns === 'granted' ? ['Notifications are allowed', 'var(--green)'] :
+    ns === 'denied' ? ['Blocked in your browser settings', 'var(--terra)'] :
+    ns === 'unsupported' ? ['Not supported by this browser', 'var(--terra)'] :
+    ['Not yet requested', 'var(--gold)'];
+  return `<div class="page-head"><div><h1>Settings</h1><div class="sub">Profile, notifications and your data</div></div></div>
+  <section class="sect" style="margin-top:0"><div class="sect-label">Profile <span class="rule"></span></div>
+    <div class="weekly" style="max-width:460px">
+      <label class="field"><span>Your name</span><input id="set-name" value="${esc(db.profile.name)}" maxlength="30"></label>
+      <label class="field"><span>Default snooze</span>
+        <select id="set-snooze">${[10,30,60].map(m => `<option value="${m}"${db.profile.snoozeDefault === m ? ' selected' : ''}>${m} minutes</option>`).join('')}</select></label>
+      <button class="btn primary" data-act="save-profile"><i data-lucide="check"></i> Save profile</button>
+    </div></section>
+  <section class="sect"><div class="sect-label">Notifications <span class="rule"></span></div>
+    <div class="weekly" style="max-width:560px">
+      <div class="meta-row"><i data-lucide="bell"></i><b>${nstat[0]}</b></div>
+      <div style="height:10px"></div>
+      <label class="check"><input type="checkbox" id="set-notify"${db.profile.notifyEnabled ? ' checked' : ''}> Fire browser notifications for due tasks (when a tab is open)</label>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn primary" data-act="notif-enable"><i data-lucide="bell"></i> Request permission</button>
+      </div>
+      <div style="height:14px"></div>
+      <div class="muted"><b style="color:var(--ink)">How delivery works, honestly:</b> browser notifications fire only while a PlantCare tab is open (background tabs included). If the app is closed when a task falls due, the missed occurrence is detected on your next visit and shown as overdue — nothing is lost or duplicated, but no alert can reach a closed browser. Round-the-clock background delivery would require a backend with Web Push.</div>
+    </div></section>
+  <section class="sect"><div class="sect-label">Data <span class="rule"></span></div>
+    <div class="weekly" style="max-width:560px">
+      <div class="muted" style="margin-bottom:12px">Everything lives in this browser's localStorage — persistent across restarts, private to this device.</div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn ghost" data-act="export"><i data-lucide="download"></i> Export backup</button>
+        <button class="btn ghost" data-act="import-btn"><i data-lucide="upload"></i> Import backup</button>
+        <button class="btn danger" data-act="reset-data"><i data-lucide="rotate-ccw"></i> Reset to demo data</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json" class="hidden">
+    </div></section>
+  <section class="sect"><div class="sect-label">Tests <span class="rule"></span></div>
+    <div class="weekly" style="max-width:560px">
+      <div class="muted" style="margin-bottom:12px">Runs the in-app test suite: recurrence math (including month-end clamping), occurrence-key deduplication and overdue detection.</div>
+      <button class="btn primary" data-act="run-tests"><i data-lucide="flask-conical"></i> Run self-tests</button>
+    </div></section>`;
+}
+
+/* ---------------- forms & modals ---------------- */
+function plantForm(p){
+  const isNew = !p;
+  p = p || { name:'', species:'', category:'indoor', location:'', plantingDate:'', notes:'', photo:null };
+  const imgMode = p.photo ? 'photo' : 'art';
+  openModal(`<h3>${isNew ? 'Add a plant' : 'Edit plant'}</h3>
+    <p class="msub">Give it a name, a spot, and anything worth remembering about its care.</p>
+    <form id="f-plant">
+      <div class="frow">
+        <label class="field"><span>Plant name *</span><input name="name" required maxlength="40" value="${esc(p.name)}" placeholder="e.g. Monstera"></label>
+        <label class="field"><span>Species</span><input name="species" maxlength="60" value="${esc(p.species)}" placeholder="e.g. Monstera deliciosa"></label>
+      </div>
+      <div class="frow">
+        <label class="field"><span>Category</span><select name="category">${Object.entries(CATS).map(([k,v]) => `<option value="${k}"${p.category === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+        <label class="field"><span>Location</span><input name="location" maxlength="60" value="${esc(p.location)}" placeholder="e.g. Kitchen windowsill"></label>
+      </div>
+      <div class="frow">
+        <label class="field"><span>Planting date</span><input type="date" name="plantingDate" value="${esc(p.plantingDate || '')}"></label>
+        <label class="field"><span>Picture</span>
+          <div class="radio-cards" id="imgmode">
+            <label class="${imgMode === 'art' ? 'on' : ''}"><input type="radio" name="imgmode" value="art" ${imgMode === 'art' ? 'checked' : ''}><i data-lucide="leaf"></i> Illustration</label>
+            <label class="${imgMode === 'photo' ? 'on' : ''}"><input type="radio" name="imgmode" value="photo" ${imgMode === 'photo' ? 'checked' : ''}><i data-lucide="camera"></i> Photo</label>
+          </div>
+        </label>
+      </div>
+      <div class="field ${imgMode === 'photo' ? '' : 'hidden'}" id="seed-wrap"><span>Photo seed (placeholder image)</span>
+        <input name="seed" value="${esc(p.photo || 'plant-' + uid())}" maxlength="40"></div>
+      <label class="field"><span>Care notes</span><textarea name="notes" maxlength="500" placeholder="Light, watering quirks, condition…">${esc(p.notes)}</textarea></label>
+      <div class="form-err" id="p-err"></div>
+      <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary" type="submit"><i data-lucide="check"></i> ${isNew ? 'Add plant' : 'Save plant'}</button></div>
+    </form>`);
+  $('#modal-root').querySelector('[data-close]').addEventListener('click', closeModal);
+  $('#f-plant').addEventListener('change', e => {
+    if (e.target.name === 'imgmode'){
+      $$('#imgmode label').forEach(l => l.classList.toggle('on', l.querySelector('input').checked));
+      $('#seed-wrap').classList.toggle('hidden', e.target.value !== 'photo');
+    }
+  });
+  $('#f-plant').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const name = String(fd.get('name')).trim();
+    const err = $('#p-err');
+    if (!name){ err.textContent = 'Please give your plant a name.'; err.style.display = 'block'; return; }
+    const photo = fd.get('imgmode') === 'photo' ? String(fd.get('seed')).trim() || 'plant' : null;
+    const data = { name, species:String(fd.get('species')).trim(), category:fd.get('category'),
+      location:String(fd.get('location')).trim(), plantingDate:fd.get('plantingDate'),
+      notes:String(fd.get('notes')).trim(), photo };
+    if (isNew){ db.plants.push({ id:uid(), ...data, createdAt:new Date().toISOString() }); toast(`${esc(name)} joined your shelf`, 'ok'); }
+    else { Object.assign(plantById(p.id), data); toast(`${esc(name)} updated`, 'ok'); }
+    save(); closeModal(); render();
+  });
+}
+function plantDetail(id){
+  const p = plantById(id); if (!p) return;
+  const scheds = db.schedules.filter(s => s.plantId === id);
+  const hist = db.history.filter(h => h.plantId === id).slice(0, 6);
+  openModal(`<div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:0 0 168px;border-radius:14px;overflow:hidden">${plantImg(p)}</div>
+    <div style="flex:1;min-width:200px">
+      <h3 style="font-size:24px">${esc(p.name)}</h3>
+      <div class="pspec">${esc(p.species || '—')}</div>
+      <div class="meta-row"><i data-lucide="map-pin"></i><span>${esc(p.location || 'No location set')}</span></div>
+      <div class="meta-row"><i data-lucide="calendar-days"></i><span>${p.plantingDate ? 'planted ' + new Date(p.plantingDate + 'T00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'}) : 'planting date unknown'}</span></div>
+      ${p.notes ? `<div class="note-bubble" style="margin-top:9px">${esc(p.notes)}</div>` : ''}
+    </div></div>
+  <section class="sect"><div class="sect-label">Care schedule <span class="rule"></span>
+    <button class="btn ghost sm" style="margin-left:auto" data-act="add-schedule" data-plant="${p.id}"><i data-lucide="plus"></i> Add reminder</button></div>
+    ${scheds.length ? scheds.map(s => { const A = ACTIVITIES[s.activity] || ACTIVITIES.custom;
+      return `<div class="drow">
+        <div class="tic st-${s.status === 'active' ? 'pending' : s.status === 'paused' ? 'paused' : 'completed'}"><i data-lucide="${A.icon}"></i></div>
+        <div class="tbody"><div class="ttitle">${A.label}</div>
+        <div class="tsub">${recLabel(s.recurrence)} · next ${s.nextDueAt ? dueLabel(s.nextDueAt) : '—'}</div></div>
+        <div class="tacts">
+          ${s.status !== 'expired' ? `<button class="icon-btn" data-act="toggle-schedule" data-id="${s.id}"><i data-lucide="${s.status === 'active' ? 'pause' : 'play'}"></i></button>` : ''}
+          <button class="icon-btn" data-act="edit-schedule" data-id="${s.id}"><i data-lucide="pencil"></i></button>
+          <button class="icon-btn" data-act="del-schedule" data-id="${s.id}" style="color:var(--terra)"><i data-lucide="trash-2"></i></button>
+        </div></div>`; }).join('')
+    : `<div class="muted">No reminders yet for this plant.</div>`}
+  </section>
+  ${hist.length ? `<section class="sect" style="margin-top:18px"><div class="sect-label">Recent care <span class="rule"></span></div>
+    ${hist.map(h => { const A = ACTIVITIES[h.activity] || ACTIVITIES.custom;
+      return `<div class="drow"><div class="tic st-completed"><i data-lucide="${A.icon}"></i></div>
+      <div class="tbody"><div class="ttitle" style="font-size:13.5px">${A.label}</div>
+      <div class="tsub">${fmt.date(h.completedAt)} at ${fmt.time(h.completedAt)}</div></div></div>`; }).join('')}</section>` : ''}
+  <div class="form-actions"><button class="btn ghost" data-close>Close</button>
+    <button class="btn ghost" data-act="edit-plant" data-id="${p.id}"><i data-lucide="pencil"></i> Edit plant</button>
+    <button class="btn danger" data-act="del-plant" data-id="${p.id}"><i data-lucide="trash-2"></i> Delete</button></div>`, 'wide');
+  $('#modal-root').querySelector('[data-close]').addEventListener('click', closeModal);
+}
+function scheduleForm(opts){
+  const s = opts.schedule || null;
+  const plantId = opts.plantId || (s ? s.plantId : db.plants[0] ? db.plants[0].id : '');
+  if (!db.plants.length){ toast('Add a plant first — reminders belong to a plant.', 'warn'); plantForm(null); return; }
+  const defDT = () => { const d = new Date(); d.setMinutes(d.getMinutes() + 30, 0, 0); return dtLocal(d); };
+  const rec = s ? s.recurrence : { type:'weekly', interval:1 };
+  openModal(`<h3>${s ? 'Edit reminder' : 'New care reminder'}</h3>
+    <p class="msub">${s ? 'Saving replaces this schedule\u2019s pending tasks and restarts from the start date.' : 'Build a schedule that fits this plant — not a one-size-fits-all default.'}</p>
+    <form id="f-sched">
+      <div class="frow">
+        <label class="field"><span>Plant *</span><select name="plant">${db.plants.map(p => `<option value="${p.id}"${plantId === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
+        <label class="field"><span>Activity *</span><select name="activity" id="act-sel">${Object.entries(ACTIVITIES).map(([k,a]) => `<option value="${k}"${(s ? s.activity : 'water') === k ? ' selected' : ''}>${a.label}</option>`).join('')}</select></label>
+      </div>
+      <label class="field"><span>Task description</span><input name="desc" maxlength="90" value="${esc(s ? s.description : '')}" placeholder="e.g. Deep water until it drains"></label>
+      <div class="frow">
+        <label class="field"><span>Starts *</span><input type="datetime-local" name="start" required value="${s && s.startDate ? dtLocal(new Date(s.startDate)) : defDT()}"></label>
+        <label class="field"><span>Repeats</span><select name="rectype" id="rec-sel">
+          ${[['once','One-time'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['days','Custom interval']].map(([k,v]) => `<option value="${k}"${rec.type === k ? ' selected' : ''}>${v}</option>`).join('')}</select></label>
+      </div>
+      <label class="field" id="int-wrap"><span id="int-label">Every</span><input type="number" name="interval" min="1" max="365" value="${rec.interval || 1}"></label>
+      <label class="check"><input type="checkbox" name="notify"${s ? (s.notify ? ' checked' : '') : ' checked'}> Fire a browser notification when this task is due</label>
+      <label class="field"><span>Notes</span><textarea name="notes" maxlength="300" placeholder="Optional notes shown with the task">${esc(s ? (s.notes || '') : '')}</textarea></label>
+      <div class="form-err" id="s-err"></div>
+      <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary" type="submit"><i data-lucide="check"></i> ${s ? 'Save reminder' : 'Create reminder'}</button></div>
+    </form>`);
+  $('#modal-root').querySelector('[data-close]').addEventListener('click', closeModal);
+  const intWrap = $('#int-wrap'), intLabel = $('#int-label');
+  const updInt = () => {
+    const t = $('#rec-sel').value;
+    const lbl = { once:'', daily:'Every N days', weekly:'Every N weeks', monthly:'Every N months', days:'Every N days' }[t];
+    intWrap.classList.toggle('hidden', t === 'once');
+    intLabel.textContent = lbl || 'Every';
+  };
+  $('#rec-sel').addEventListener('change', updInt); updInt();
+  $('#f-sched').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const err = $('#s-err');
+    const start = parseLocal(String(fd.get('start')));
+    const type = fd.get('rectype');
+    const interval = parseInt(fd.get('interval'), 10);
+    if (isNaN(start.getTime())){ err.textContent = 'Please pick a valid start date and time.'; err.style.display = 'block'; return; }
+    if (type !== 'once' && (isNaN(interval) || interval < 1 || interval > 365)){ err.textContent = 'The repeat interval must be a whole number between 1 and 365.'; err.style.display = 'block'; return; }
+    if (start < new Date()){ err.textContent = 'The start time is in the past — this task will immediately be marked overdue. Adjust it if that is not intended.'; err.style.display = 'block'; return; }
+    const data = {
+      plantId: fd.get('plant'), activity: fd.get('activity'),
+      description: String(fd.get('desc')).trim(), notes: String(fd.get('notes')).trim(),
+      startDate: start.toISOString(), nextDueAt: start.toISOString(),
+      recurrence: { type, interval: type === 'once' ? 0 : Math.max(1, interval) },
+      notify: !!fd.get('notify'),
+    };
+    if (s){
+      Object.assign(s, data, { status:'active' });
+      db.occurrences = db.occurrences.filter(o => !(o.scheduleId === s.id && o.status !== 'completed'));
+      toast('Reminder updated — pending tasks regenerated', 'ok');
+    } else {
+      db.schedules.push({ id:uid(), ...data, status:'active', createdAt:new Date().toISOString() });
+      toast('Reminder created', 'ok');
+    }
+    save(); closeModal(); render();
+  });
+}
+function taskModal(taskId){
+  const o = getTask(taskId); if (!o) return;
+  const p = plantById(o.plantId), A = ACTIVITIES[o.activity] || ACTIVITIES.custom;
+  const st = statusOf(o);
+  openModal(`<div style="display:flex;gap:14px;align-items:center;margin-bottom:8px">
+    <div class="tic st-${st}"><i data-lucide="${A.icon}"></i></div>
+    <div><h3>${A.label} · <em class="serif" style="font-weight:500">${esc(p ? p.name : '—')}</em></h3>
+    <div class="muted">${recLabel(schedById(o.scheduleId) ? schedById(o.scheduleId).recurrence : {type:'once'})}</div></div>
+    <span class="pill ${st}" style="margin-left:auto">${st}</span></div>
+  <div class="weekly">
+    <div class="meta-row"><i data-lucide="clock"></i><b>${dueLabel(o.dueAt)}</b><span class="muted">(${relTime(o.dueAt)})</span></div>
+    ${o.description ? `<div class="meta-row"><i data-lucide="pencil"></i><span>${esc(o.description)}</span></div>` : ''}
+    ${o.notes ? `<div class="meta-row"><i data-lucide="info"></i><span>${esc(o.notes)}</span></div>` : ''}
+    ${st === 'snoozed' ? `<div class="meta-row"><i data-lucide="alarm-clock"></i><span>snoozed until ${fmt.time(o.snoozedUntil)}</span></div>` : ''}
+    ${st === 'completed' ? `<div class="meta-row"><i data-lucide="check"></i><span>completed ${new Date(o.completedAt).toLocaleString()}</span></div>` : ''}
+  </div>
+  ${st === 'completed' ? `<div class="form-actions" style="margin-top:16px"><button class="btn ghost" data-close>Close</button></div>` : `
+  <form id="f-done" style="margin-top:16px">
+    <label class="field"><span>Completion note (optional)</span><input name="note" maxlength="200" placeholder="e.g. Gave it a good soak, drained well"></label>
+    <div class="form-actions" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn ghost" data-act="resched" data-id="${o.id}"><i data-lucide="calendar-days"></i> Reschedule</button>
+        ${st === 'overdue' ? `<button type="button" class="btn ghost" data-act="snooze" data-id="${o.id}" data-ms="${(db.profile.snoozeDefault||30)*60000}"><i data-lucide="alarm-clock"></i> Snooze ${db.profile.snoozeDefault||30}m</button>` : ''}
+      </div>
+      <button class="btn primary" type="submit"><i data-lucide="check"></i> Mark as done</button>
+    </div></form>`}`);
+  $('#modal-root').querySelector('[data-close]')?.addEventListener('click', closeModal);
+  const fd = $('#f-done');
+  if (fd) fd.addEventListener('submit', e => { e.preventDefault(); closeModal(); completeTask(taskId, new FormData(e.target).get('note')); });
+}
+function reschedModal(taskId){
+  const o = getTask(taskId); if (!o) return;
+  const s = schedById(o.scheduleId);
+  const rec = s ? s.recurrence : { type:'once' };
+  openModal(`<h3>Reschedule task</h3>
+    <p class="msub">Move this occurrence to a new date and time.</p>
+    <form id="f-resched">
+      <label class="field"><span>New date & time *</span><input type="datetime-local" name="dt" required value="${dtLocal(new Date(o.dueAt))}"></label>
+      ${rec.type !== 'once' ? `<label class="check"><input type="checkbox" name="shift"> Also shift future reminders from this new time</label>` : ''}
+      <div class="form-err" id="r-err"></div>
+      <div class="form-actions"><button type="button" class="btn ghost" data-close>Cancel</button>
+      <button class="btn primary" type="submit"><i data-lucide="check"></i> Reschedule</button></div>
+    </form>`);
+  $('#modal-root').querySelector('[data-close]').addEventListener('click', closeModal);
+  $('#f-resched').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const dt = parseLocal(String(fd.get('dt')));
+    if (isNaN(dt.getTime())){ $('#r-err').textContent = 'Please pick a valid date and time.'; $('#r-err').style.display = 'block'; return; }
+    const occ = ensureMaterial(taskId);
+    occ.dueAt = dt.toISOString();
+    occ.snoozedUntil = null; occ.snoozeAlerted = false; occ.notifiedAt = null;
+    if (fd.get('shift') && s && rec.type !== 'once'){
+      const nxt = REC.next(occ.dueAt, rec);
+      if (nxt){ s.nextDueAt = nxt; s.status = 'active'; }
+    }
+    save(); closeModal(); toast(`Moved to ${dueLabel(occ.dueAt)}`, 'ok'); render();
+  });
+}
+
+/* ---------------- bell panel ---------------- */
+function bellItems(){
+  return pendingOccurrences().filter(o => statusOf(o) === 'overdue').sort(byDue);
+}
+function renderBellPanel(){
+  const items = bellItems();
+  const ns = NOTIFY.status();
+  $('#bell-panel').innerHTML = `<div class="bp-title">Needs attention</div>
+    ${items.length ? items.slice(0, 8).map(o => { const p = plantById(o.plantId), A = ACTIVITIES[o.activity] || ACTIVITIES.custom;
+      return `<div class="bp-item">
+        <div class="tic st-overdue" style="width:30px;height:30px;border-radius:8px"><i data-lucide="${A.icon}"></i></div>
+        <div class="tbody"><div class="ttitle">${A.label} · ${esc(p ? p.name : '')}</div><div class="tsub">${relTime(o.dueAt)}</div></div>
+        <button class="icon-btn ok" data-act="done" data-id="${o.id}" style="width:28px;height:28px"><i data-lucide="check"></i></button>
+        <button class="icon-btn al" data-act="snooze" data-id="${o.id}" data-ms="${(db.profile.snoozeDefault||30)*60000}" style="width:28px;height:28px"><i data-lucide="alarm-clock"></i></button>
+      </div>`; }).join('')
+    : `<div class="bp-empty">Nothing overdue. The shelf is at peace.</div>`}
+    ${ns !== 'granted' ? `<button class="bp-cta" data-act="notif-enable">${ns === 'denied' || ns === 'unsupported' ? 'Browser alerts unavailable — reminders show in-app' : 'Turn on browser alerts'}</button>` : ''}
+    <a class="bp-cta" href="#/tasks" data-act="bell-close">View all tasks</a>`;
+  icons();
+}
+function updateBellBadge(){
+  const n = bellItems().length;
+  const b = $('#bell-badge');
+  b.classList.toggle('hidden', n === 0);
+  b.textContent = n;
+}
+
+/* ---------------- router / render ---------------- */
+const state = {
+  route:'today', daySel:null, tasksTab:'tasks', calView:'month', calCursor:new Date(),
+  filters:{ q:'', plant:'', activity:'', status:'', from:'', to:'', cat:'' },
+};
+function render(){
+  sync();
+  const v = $('#view');
+  v.innerHTML = ({ today:renderToday, plants:renderPlants, tasks:renderTasks,
+                   calendar:renderCalendar, history:renderHistory, settings:renderSettings })[state.route]();
+  $$('#nav a').forEach(a => a.classList.toggle('on', a.dataset.r === state.route));
+  icons(); updateBellBadge();
+}
+function softRender(){ // re-render while preserving focus in filter inputs
+  const ae = document.activeElement;
+  const keep = ae && ['INPUT','SELECT','TEXTAREA'].includes(ae.tagName) && ae.dataset.filter !== undefined
+    ? { filter: ae.dataset.filter, pos: ae.selectionStart } : null;
+  render();
+  if (keep){
+    const el = document.querySelector(`[data-filter="${keep.filter}"]`);
+    if (el){ el.focus(); if (el.setSelectionRange && keep.pos != null){ try { el.setSelectionRange(keep.pos, keep.pos); } catch(e){} } }
+  }
+}
+function navigate(){
+  const h = location.hash.replace('#/','') || 'today';
+  state.route = PAGES[h] ? h : 'today';
+  state.daySel = state.daySel || dayKey(new Date());
+  render();
+}
+window.addEventListener('hashchange', navigate);
+
+/* ---------------- actions ---------------- */
+function deletePlant(id){
+  const p = plantById(id); if (!p) return;
+  confirmDialog({
+    title:`Delete ${p.name}?`,
+    body:'This removes the plant, its reminder schedules, pending tasks and care history. You can undo for a few seconds after deleting.',
+    ok:'Delete plant',
+    onOK(){
+      const snap = { plant:p,
+        schedules:db.schedules.filter(s => s.plantId === id),
+        occurrences:db.occurrences.filter(o => o.plantId === id),
+        history:db.history.filter(h => h.plantId === id) };
+      db.plants = db.plants.filter(x => x.id !== id);
+      db.schedules = db.schedules.filter(s => s.plantId !== id);
+      db.occurrences = db.occurrences.filter(o => o.plantId !== id);
+      db.history = db.history.filter(h => h.plantId !== id);
+      save(); render();
+      toast(`${esc(p.name)} deleted`, 'warn', { action:{ label:'Undo', act(){
+        db.plants.push(snap.plant); db.schedules.push(...snap.schedules);
+        db.occurrences.push(...snap.occurrences); db.history.push(...snap.history);
+        save(); render(); toast(`${esc(p.name)} restored`, 'ok');
+      }}});
+    }
+  });
+}
+function deleteSchedule(id){
+  const s = schedById(id); if (!s) return;
+  const p = plantById(s.plantId);
+  confirmDialog({
+    title:'Delete this reminder?',
+    body:`The “${(ACTIVITIES[s.activity]||ACTIVITIES.custom).label}” schedule for ${esc(p ? p.name : 'this plant')} and its pending tasks will be removed. Completed history is kept.`,
+    ok:'Delete reminder',
+    onOK(){
+      db.schedules = db.schedules.filter(x => x.id !== id);
+      db.occurrences = db.occurrences.filter(o => !(o.scheduleId === id && o.status !== 'completed'));
+      save(); closeModal(); render(); toast('Reminder deleted', 'warn');
+    }
+  });
+}
+function exportData(){
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `plantcare-backup-${dayKey(new Date())}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Backup exported', 'ok');
+}
+function importData(file){
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if (!data || data.v !== 1 || !Array.isArray(data.plants) || !Array.isArray(data.schedules)) throw 0;
+      confirmDialog({ title:'Import backup?', body:'This replaces all current data with the backup file.', ok:'Import', danger:false,
+        onOK(){ db = data; save(); toast('Backup imported', 'ok'); render(); } });
+    } catch(e){ toast('That file is not a valid PlantCare backup.', 'warn'); }
+  };
+  r.readAsText(file);
+}
+function runSelfTests(){
+  const t = [];
+  const eq = (a, b, m) => t.push({ ok: JSON.stringify(a) === JSON.stringify(b), m });
+  const mk = (y, mo, d, h = 8, mi = 0) => new Date(y, mo-1, d, h, mi).toISOString();
+  eq(REC.next(mk(2023,1,31), {type:'monthly',interval:1}),  mk(2023,2,28),  'Jan 31 + 1 month → Feb 28 (clamped)');
+  eq(REC.next(mk(2024,1,31), {type:'monthly',interval:1}),  mk(2024,2,29),  'Jan 31 + 1 month → Feb 29 (leap year)');
+  eq(REC.next(mk(2024,8,31), {type:'monthly',interval:1}),  mk(2024,9,30),  'Aug 31 + 1 month → Sep 30 (clamped)');
+  eq(REC.next(mk(2024,2,29), {type:'monthly',interval:12}), mk(2025,2,28),  'Feb 29 + 12 months → Feb 28');
+  eq(REC.next(mk(2024,1,15,9,30), {type:'monthly',interval:2}), mk(2024,3,15,9,30), '+2 months keeps time of day');
+  eq(REC.next(mk(2024,3,1), {type:'daily',interval:1}),  mk(2024,3,2),  'daily +1 day');
+  eq(REC.next(mk(2024,3,1), {type:'days',interval:10}),  mk(2024,3,11), 'custom +10 days');
+  eq(REC.next(mk(2024,3,1), {type:'weekly',interval:2}), mk(2024,3,15), 'every 2 weeks');
+  eq(REC.next(mk(2024,3,1), {type:'once'}), null, 'one-time returns null');
+  // dedup via stable occurrence key
+  const ts = { id:'t-dedup', plantId:'x', activity:'water', description:'', recurrence:{type:'daily',interval:1} };
+  const a = materialize(ts, mk(2024,3,1)), b = materialize(ts, mk(2024,3,1));
+  eq(a.id === b.id, true, 'same scheduled moment → one occurrence (no duplicate notification)');
+  db.occurrences = db.occurrences.filter(o => o.scheduleId !== 't-dedup'); save();
+  // status classification
+  eq(statusOf({status:'pending', dueAt:new Date(Date.now()-36e5).toISOString(), scheduleId:'nope'}), 'overdue', 'missed task flagged overdue');
+  eq(statusOf({status:'pending', dueAt:new Date(Date.now()+36e5).toISOString(), scheduleId:'nope'}), 'pending', 'future task stays pending');
+  eq(statusOf({status:'completed', dueAt:new Date(Date.now()-36e5).toISOString()}), 'completed', 'completed stays completed');
+  const pass = t.filter(x => x.ok).length;
+  openModal(`<h3>Self-tests</h3><p class="msub">${pass}/${t.length} passed${pass === t.length ? ' — all green' : ''}. Restart recovery is covered by design: schedules persist <code>next_due_at</code>, and the sync pass materializes anything missed while the app was closed.</p>
+    ${t.map(x => `<div class="test-row ${x.ok ? 'ok' : 'bad'}"><span class="mark">${x.ok ? '✓' : '✗'}</span><span>${esc(x.m)}</span></div>`).join('')}
+    <div class="form-actions" style="margin-top:14px"><button class="btn ghost" data-close>Close</button></div>`);
+  $('#modal-root').querySelector('[data-close]').addEventListener('click', closeModal);
+}
+
+/* ---------------- global event delegation ---------------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  // close bell panel when clicking outside it
+  if (!e.target.closest('#bell-zone')) $('#bell-panel').classList.remove('open');
+  if (!t) return;
+  const id = t.dataset.id;
+  switch (t.dataset.act){
+    case 'theme-toggle': {
+      db.profile.theme = db.profile.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(); save(); break;
+    }
+    case 'bell-toggle': {
+      const pn = $('#bell-panel');
+      if (pn.classList.contains('open')) pn.classList.remove('open');
+      else { renderBellPanel(); pn.classList.add('open'); }
+      break;
+    }
+    case 'bell-close': $('#bell-panel').classList.remove('open'); break;
+    case 'notif-enable': NOTIFY.request(); break;
+    case 'dismiss-hint': db.profile.hintDismissed = true; save(); render(); break;
+    case 'add-plant': plantForm(null); break;
+    case 'edit-plant': plantForm(plantById(id)); break;
+    case 'open-plant': plantDetail(id); break;
+    case 'del-plant': deletePlant(id); break;
+    case 'add-schedule': scheduleForm({ plantId: t.dataset.plant || null }); break;
+    case 'edit-schedule': { const s = schedById(id); if (s) scheduleForm({ schedule:s }); break; }
+    case 'del-schedule': deleteSchedule(id); break;
+    case 'toggle-schedule': {
+      const s = schedById(id); if (!s) break;
+      if (s.status === 'active'){ s.status = 'paused'; toast('Reminder paused', 'info'); }
+      else if (s.status === 'paused'){ s.status = 'active'; toast('Reminder resumed — anything missed while paused is now due', 'info'); }
+      save(); render(); break;
+    }
+    case 'task': taskModal(id); break;
+    case 'done': completeTask(id); break;
+    case 'snooze': snoozeTask(id, parseInt(t.dataset.ms, 10) || 18e5); break;
+    case 'resched': closeModal(); reschedModal(id); break;
+    case 'pick-day': state.daySel = t.dataset.date; render(); break;
+    case 'goto': {
+      if (t.dataset.preset === 'overdue'){ state.filters.status = 'overdue'; state.tasksTab = 'tasks'; }
+      location.hash = t.dataset.hash; break;
+    }
+    case 'tab': state.tasksTab = t.dataset.tab; render(); break;
+    case 'cat-filter': state.filters.cat = t.dataset.cat; render(); break;
+    case 'cal-prev': case 'cal-next': {
+      const n = t.dataset.act === 'cal-next' ? 1 : -1;
+      const c = state.calCursor;
+      if (state.calView === 'month') state.calCursor = new Date(c.getFullYear(), c.getMonth() + n, 1);
+      else if (state.calView === 'week') state.calCursor = addDays(c, 7*n);
+      else state.calCursor = addDays(c, n);
+      render(); break;
+    }
+    case 'cal-today': state.calCursor = new Date(); render(); break;
+    case 'cal-view': state.calView = t.dataset.view; render(); break;
+    case 'cal-pick': { if (state.calView !== 'day' && e.target.closest('.cell')){ state.calView = 'day'; state.calCursor = new Date(t.dataset.date + 'T00:00'); render(); } break; }
+    case 'save-profile': {
+      db.profile.name = String($('#set-name').value).trim() || 'friend';
+      db.profile.snoozeDefault = parseInt($('#set-snooze').value, 10) || 30;
+      save(); toast('Profile saved', 'ok'); render(); break;
+    }
+    case 'export': exportData(); break;
+    case 'import-btn': $('#import-file').click(); break;
+    case 'reset-data':
+      confirmDialog({ title:'Reset everything?', body:'All plants, schedules and history in this browser are replaced with the demo data.', ok:'Reset',
+        onOK(){ localStorage.removeItem(DB_KEY); load(); sync(); applyTheme(); render(); toast('Fresh demo data planted', 'ok'); } });
+      break;
+    case 'run-tests': runSelfTests(); break;
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.id === 'import-file' && el.files[0]){ importData(el.files[0]); el.value = ''; return; }
+  if (el.id === 'set-notify'){ db.profile.notifyEnabled = el.checked; save(); toast(el.checked ? 'Browser notifications on' : 'Browser notifications muted — in-app alerts continue', 'info'); return; }
+  if (el.dataset.filter){
+    state.filters[el.dataset.filter] = el.value;
+    softRender();
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.dataset.filter === 'q'){ state.filters.q = e.target.value; softRender(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ closeModal(); $('#bell-panel').classList.remove('open'); }
+});
+// overlay click (only direct hits on the backdrop)
+document.addEventListener('click', e => {
+  if (e.target.dataset && e.target.dataset.overlay !== undefined) closeModal();
+});
+
+/* ---------------- theme & timers ---------------- */
+function applyTheme(){
+  document.documentElement.dataset.theme = db.profile.theme === 'dark' ? 'dark' : 'light';
+  const b = $('#theme-btn');
+  b.innerHTML = `<i data-lucide="${db.profile.theme === 'dark' ? 'sun' : 'moon'}"></i><span class="nl">${db.profile.theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>`;
+  icons();
+}
+function modalOpen(){ return !!$('#modal-root').querySelector('.modal'); }
+function typing(){ const a = document.activeElement; return a && ['INPUT','SELECT','TEXTAREA'].includes(a.tagName); }
+setInterval(() => {
+  if (document.hidden) return;
+  const changed = sync();
+  updateBellBadge();
+  if (changed && !modalOpen() && !typing()) render();
+}, 15000);
+setInterval(() => { // live countdowns
+  $$('[data-cd]').forEach(el => {
+    const iso = el.dataset.cd;
+    el.textContent = relTime(iso);
+    if (new Date(iso) <= Date.now() && !el.dataset.fired){ el.dataset.fired = '1'; sync(); if (!modalOpen() && !typing()) render(); }
+  });
+}, 1000);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden){ const c = sync(); updateBellBadge(); if (c && !modalOpen() && !typing()) render(); }
+});
+
+/* ---------------- sample data (realistic, internally consistent) ---------------- */
+function seed(){
+  const now = new Date();
+  const at = (days, h, m = 0) => { const d = addDays(startOfDay(now), days); d.setHours(h, m, 0, 0); return d.toISOString(); };
+  db.plants = [
+    { id:'p-mon', name:'Monstera', species:'Monstera deliciosa', category:'indoor', photo:null, location:'Living room shelf', plantingDate:'2024-03-15', notes:'Loves bright indirect light. Wipe leaves monthly so it can breathe.', createdAt:at(-300,10) },
+    { id:'p-bas', name:'Basil', species:'Ocimum basilicum', category:'herbs', photo:null, location:'Kitchen windowsill', plantingDate:'2025-02-02', notes:'Pinch off flowers to keep the leaves coming.', createdAt:at(-40,9) },
+    { id:'p-snk', name:'Snake Plant', species:'Dracaena trifasciata', category:'succulents', photo:null, location:'Bedroom corner', plantingDate:'2023-11-10', notes:'Very drought tolerant — better to underwater than overwater.', createdAt:at(-480,11) },
+    { id:'p-tom', name:'Cherry Tomato', species:'Solanum lycopersicum', category:'vegetables', photo:null, location:'Balcony, south side', plantingDate:'2025-01-20', notes:'Stake as it grows. Watch undersides of leaves for aphids.', createdAt:at(-52,8) },
+    { id:'p-jad', name:'Jade Plant', species:'Crassula ovata', category:'succulents', photo:null, location:'Study desk', plantingDate:'2024-06-05', notes:'Grown from a cutting. Needs a wider pot soon.', createdAt:at(-220,14) },
+  ];
+  db.schedules = [
+    { id:'s-mon-wat', plantId:'p-mon', activity:'water',    description:'Deep water until it drains', notes:'', startDate:at(1,8),   nextDueAt:at(1,8),   recurrence:{type:'weekly',interval:1},  notify:true, status:'active', createdAt:at(-90,8) },
+    { id:'s-mon-pru', plantId:'p-mon', activity:'prune',    description:'Trim yellow leaves and unruly aerial roots', notes:'', startDate:at(9,10),  nextDueAt:at(9,10),  recurrence:{type:'monthly',interval:1}, notify:true, status:'active', createdAt:at(-90,8) },
+    { id:'s-mon-cln', plantId:'p-mon', activity:'clean',    description:'Wipe dust off both sides of every leaf', notes:'', startDate:at(3,16),  nextDueAt:at(3,16),  recurrence:{type:'days',interval:14},    notify:true, status:'active', createdAt:at(-90,8) },
+    { id:'s-bas-wat', plantId:'p-bas', activity:'water',    description:'Check soil an inch down — water if dry', notes:'Basil hates soggy roots', startDate:new Date(Date.now()+18*60000).toISOString(), nextDueAt:new Date(Date.now()+18*60000).toISOString(), recurrence:{type:'days',interval:2}, notify:true, status:'active', createdAt:at(-40,9) },
+    { id:'s-bas-sun', plantId:'p-bas', activity:'sunlight', description:'Rotate the pot a quarter turn', notes:'', startDate:at(5,9),   nextDueAt:at(5,9),   recurrence:{type:'weekly',interval:1},  notify:true, status:'active', createdAt:at(-40,9) },
+    { id:'s-snk-wat', plantId:'p-snk', activity:'water',    description:'Small drink only — it hates wet feet', notes:'', startDate:at(6,8),   nextDueAt:at(6,8),   recurrence:{type:'days',interval:14},    notify:true, status:'active', createdAt:at(-200,8) },
+    { id:'s-snk-soi', plantId:'p-snk', activity:'moisture', description:'Stick a finger two inches into the soil', notes:'', startDate:at(13,18), nextDueAt:at(13,18), recurrence:{type:'days',interval:14},    notify:true, status:'active', createdAt:at(-200,8) },
+    { id:'s-tom-wat', plantId:'p-tom', activity:'water',    description:'Water the base, not the leaves', notes:'', startDate:at(1,7),   nextDueAt:at(1,7),   recurrence:{type:'daily',interval:1},    notify:true, status:'active', createdAt:at(-52,8) },
+    { id:'s-tom-fer', plantId:'p-tom', activity:'fertilize',description:'Tomato feed at half strength', notes:'', startDate:at(4,9),   nextDueAt:at(4,9),   recurrence:{type:'days',interval:14},    notify:true, status:'active', createdAt:at(-52,8) },
+    { id:'s-tom-pes', plantId:'p-tom', activity:'pest',     description:'Check undersides of leaves for aphids', notes:'', startDate:at(2,17),  nextDueAt:at(2,17),  recurrence:{type:'weekly',interval:1},   notify:true, status:'active', createdAt:at(-52,8) },
+    { id:'s-jad-wat', plantId:'p-jad', activity:'water',    description:'Light watering only when soil is fully dry', notes:'', startDate:at(11,12), nextDueAt:at(11,12), recurrence:{type:'days',interval:21},    notify:true, status:'active', createdAt:at(-150,12) },
+    { id:'s-jad-rep', plantId:'p-jad', activity:'repot',    description:'Move to a pot one size up with gritty mix', notes:'', startDate:at(26,10), nextDueAt:at(26,10), recurrence:{type:'once',interval:0},     notify:true, status:'active', createdAt:at(-150,12) },
+  ];
+  db.occurrences = []; db.history = [];
+  const S = id => db.schedules.find(s => s.id === id);
+  function done(schedId, dueAt, doneAt, notes = ''){
+    const s = S(schedId);
+    db.occurrences.push({ id:schedId+'@'+dueAt, scheduleId:schedId, plantId:s.plantId, activity:s.activity,
+      description:s.description, notes, dueAt, status:'completed', snoozedUntil:null, snoozeCount:0,
+      snoozeAlerted:false, notifiedAt:dueAt, completedAt:doneAt });
+    db.history.push({ id:uid(), plantId:s.plantId, scheduleId:schedId, activity:s.activity,
+      scheduledAt:dueAt, completedAt:doneAt, notes });
+  }
+  // history that matches each schedule's cadence, so the data reads as one coherent garden
+  done('s-mon-wat', at(-6,8),  at(-6,8,12), 'Poured until runoff, drained the saucer');
+  done('s-mon-pru', at(-21,10),at(-21,10,35));
+  done('s-mon-cln', at(-11,16),at(-11,16,50), 'Leaves were quite dusty');
+  done('s-bas-wat', new Date(Date.now()+18*60000-2*864e5).toISOString(), new Date(Date.now()-2*864e5+4*60000).toISOString(), 'Soil was dry an inch down');
+  done('s-snk-wat', at(-8,8),  at(-8,8,20));
+  for (let i = 1; i <= 5; i++) done('s-tom-wat', at(-i,7), at(-i,7,i%2?4:9));
+  done('s-tom-fer', at(-10,9), at(-10,9,15));
+  done('s-tom-pes', at(-12,17),at(-12,17,40), 'Found two aphids, removed by hand');
+  done('s-jad-wat', at(-10,12),at(-10,12,8));
+  // one genuinely missed task → shows the overdue flow on first load
+  const s = S('s-tom-pes');
+  db.occurrences.push({ id:'s-tom-pes@'+at(-5,17), scheduleId:'s-tom-pes', plantId:'p-tom', activity:'pest',
+    description:s.description, notes:'', dueAt:at(-5,17), status:'pending', snoozedUntil:null,
+    snoozeCount:0, snoozeAlerted:false, notifiedAt:at(-5,17), completedAt:null });
+}
+
+/* ---------------- boot ---------------- */
+load();
+applyTheme();
+navigate();
+sync();
+render();
+</script>
+</body>
+</html>
